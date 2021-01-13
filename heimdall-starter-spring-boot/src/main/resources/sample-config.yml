@@ -1,0 +1,31 @@
+server:
+  port: 8080
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  application:
+    name: ${project.artifactId}
+  profiles:
+    active: dev
+# heimdall 参数配置
+heimdall:
+  security:
+    session:
+      session-name: HSessionId
+      globalSessionTimeout: 300
+      session-id-prefix: "heimdall:sessions:"
+      active-session-cache-key: "heimdall:active-sessions:"
+      active-user-cache-key: "heimdall:active-users:"
+      renew: true
+      ratio: 0.5
+    scheduler:
+      initialDelay: 100
+      period: 100
+    cookie:
+      enabled: true
+      name: ${heimdall.security.session.session-name}
+      max-age: -1
+      path: /
+      http-only: true
+      secure: false
+      version: 0

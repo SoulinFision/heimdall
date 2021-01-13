@@ -1,0 +1,55 @@
+server:
+  port: 8081
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  application:
+    name: ${project.artifactId}
+  data:
+    redis:
+      repositories:
+        enabled: false
+  #相关信息改成你自己的
+  redis:
+    database: 0
+    host: 1.1.1.1
+    port: 9999
+    password: your password
+    timeout: 60s
+    lettuce:
+      pool:
+        max-active:  10 # 连接池最大连接数（使用负值表示没有限制）
+        max-idle: 5 # 连接池中的最大空闲连接
+        min-idle: 5 # 连接池中的最小空闲连接
+        max-wait: 600s # 连接池最大阻塞等待时间（使用负值表示没有限制）
+logging:
+  pattern:
+    console: '%boldWhite(%d) | %green([%t]) | [%highlight(%p)] %highlight(%c{1.}.%M\(%L\)): %highlight(%msg%n)'
+    file: '%d [%t] %p %c{1.}.%M\(%L\)  %m%n'
+  file:
+    name: logs/${project.artifactId}.log
+#Heimdal参数配置
+heimdall:
+  security:
+    session:
+      session-name: HSessionId
+      globalSessionTimeout: 30
+      session-id-prefix: "heimdall:sessions:"
+      active-session-cache-key: "heimdall:active-sessions:"
+      active-user-cache-key: "heimdall:active-users:"
+      renew: true
+      ratio: 0.5
+    scheduler:
+      initialDelay: 10
+      period: 30
+    cookie:
+      enabled: true
+      name: ${heimdall.security.session.session-name}
+      max-age: -1
+      path: /
+      http-only: true
+      secure: false
+      version: 0
+    authorities-cached-key: "heimdall:authorities"
+
+

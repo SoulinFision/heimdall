@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.luter.heimdall.boot.starter.config.ServletConfiguration,\
+  com.luter.heimdall.boot.starter.resolver.CurrentUserRequestArgumentResolver,\
+  com.luter.heimdall.boot.starter.config.BasicErrorControllerConfig
