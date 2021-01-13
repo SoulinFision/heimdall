@@ -5,18 +5,18 @@
     <parent>
         <artifactId>samples</artifactId>
         <groupId>com.github.luterc</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>samples-common</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>${project.artifactId}</name>
     <description>Heimdall spring boot samples common module</description>
     <dependencies>
         <dependency>
             <groupId>com.github.luterc</groupId>
             <artifactId>heimdall-starter-spring-boot</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
             <exclusions>
                 <exclusion>
                     <artifactId>error_prone_annotations</artifactId>

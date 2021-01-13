@@ -5,11 +5,11 @@
     <parent>
         <artifactId>heimdall</artifactId>
         <groupId>com.github.luterc</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>heimdall-cache-caffeine</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>${project.artifactId}</name>
     <description>Heimdall Caffiene 缓存模块</description>
     <url>https://github.com/luterc/heimdall</url>
@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.github.luterc</groupId>
             <artifactId>heimdall-core</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
             <exclusions>
                 <exclusion>
                     <artifactId>error_prone_annotations</artifactId>

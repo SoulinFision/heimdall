@@ -5,11 +5,11 @@
     <parent>
         <artifactId>heimdall</artifactId>
         <groupId>com.github.luterc</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>heimdall-core</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>${project.artifactId}</name>
     <description>Heimdall 核心模块</description>
     <url>https://github.com/luterc/heimdall</url>
