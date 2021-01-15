@@ -17,9 +17,12 @@
 package com.luter.heimdall.core.authorization.service;
 
 
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.manager.AuthorizationManager;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 
@@ -54,5 +57,10 @@ public interface AuthorizationMetaDataService {
      * @return the map
      * @see AuthorizationManager#isAuthorized(HttpServletRequest, boolean) AuthorizationManager#isAuthorized(HttpServletRequest, boolean)
      */
-    Map<String, String> loadAuthorities();
+    Map<String, Collection<String>> loadSysAuthorities();
+
+    /**
+     * 加载用户权限
+     */
+    List<? extends GrantedAuthority> loadUserAuthorities();
 }

@@ -22,6 +22,7 @@ import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -35,39 +36,44 @@ public class CachedAuthorizationMetaDataDao implements AuthorizationMetaDataCach
     /**
      * The Cache.
      */
-    private final SimpleCache<String, Map<String, String>> cache;
-
+    private final SimpleCache<String, Map<String, Collection<String>>> sysCache;
 
     /**
      * The Cache key.
      */
-    private final String cacheKey;
+    private final String sysCacheKey;
 
     /**
      * Instantiates a new Cached authorization dao.
      *
      * @param cache the cache
      */
-    public CachedAuthorizationMetaDataDao(SimpleCache<String, Map<String, String>> cache) {
-        this.cache = cache;
-        String key = ConfigManager.getConfig().getAuthoritiesCachedKey();
-        cacheKey = StrUtils.isBlank(key) ? AUTHORITIES_CACHED_KEY : key;
+    public CachedAuthorizationMetaDataDao(SimpleCache<String, Map<String, Collection<String>>> cache) {
+        this.sysCache = cache;
+        String sysKey = ConfigManager.getConfig().getAuthority().getSysCachedKey();
+        sysCacheKey = StrUtils.isBlank(sysKey) ? SYS_AUTHORITIES_CACHED_KEY : sysKey;
     }
 
 
     @Override
-    public Map<String, String> getSysAuthorities() {
-        return cache.get(getCacheKey());
+    public Map<String, Collection<String>> getSysAuthorities() {
+        return sysCache.get(getSysCacheKey());
     }
 
     @Override
-    public void setSysAuthorities(Map<String, String> authorities) {
-        cache.put(getCacheKey(), authorities);
+    public void clearSysAuthorities() {
+        sysCache.remove(getSysCacheKey());
     }
 
     @Override
-    public void resetCachedSysAuthorities(Map<String, String> authorities) {
-        cache.remove(getCacheKey());
+    public void setSysAuthorities(Map<String, Collection<String>> authorities) {
+        sysCache.put(getSysCacheKey(), authorities);
+    }
+
+
+    @Override
+    public void resetCachedSysAuthorities(Map<String, Collection<String>> authorities) {
+        clearSysAuthorities();
         setSysAuthorities(authorities);
     }
 
@@ -77,8 +83,8 @@ public class CachedAuthorizationMetaDataDao implements AuthorizationMetaDataCach
      *
      * @return the cache key
      */
-    public String getCacheKey() {
-        return cacheKey;
+    public String getSysCacheKey() {
+        return sysCacheKey;
     }
 
 

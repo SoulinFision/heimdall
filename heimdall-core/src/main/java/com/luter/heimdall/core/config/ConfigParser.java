@@ -16,6 +16,7 @@
 
 package com.luter.heimdall.core.config;
 
+import com.luter.heimdall.core.config.property.AuthorityProperty;
 import com.luter.heimdall.core.config.property.CookieProperty;
 import com.luter.heimdall.core.config.property.SchedulerProperty;
 import com.luter.heimdall.core.config.property.SessionProperty;
@@ -58,10 +59,12 @@ public final class ConfigParser {
         final CookieProperty cookieConfig = (CookieProperty) readPropValue(map, "heimdall.security.cookie.", new CookieProperty());
         final SessionProperty sessionConfig = (SessionProperty) readPropValue(map, "heimdall.security.session.", new SessionProperty());
         final SchedulerProperty schedulerConfig = (SchedulerProperty) readPropValue(map, "heimdall.security.scheduler.", new SchedulerProperty());
+        final AuthorityProperty authorityProperty = (AuthorityProperty) readPropValue(map, "heimdall.security.authority.", new AuthorityProperty());
         Config config = new Config();
         config.setCookie(cookieConfig);
         config.setSession(sessionConfig);
         config.setScheduler(schedulerConfig);
+        config.setAuthority(authorityProperty);
         log.warn("从配置文件:{} 加载配置参数完毕，配置\n{}", CONFIG_PATH, config.toString());
         return config;
     }

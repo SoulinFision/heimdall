@@ -16,6 +16,7 @@
 
 package com.luter.heimdall.core.session.dao;
 
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.exception.InvalidSessionException;
@@ -24,6 +25,7 @@ import com.luter.heimdall.core.session.Page;
 import com.luter.heimdall.core.session.SimpleSession;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The interface Session dao.
@@ -130,6 +132,31 @@ public interface SessionDAO {
      */
     default void validateExpiredSessions() {
         System.out.println("======validateExpiredSessions default");
+    }
+
+    /////用户权限信息缓存
+
+    /**
+     * 用户登录成功后，缓存用户具有的权限
+     */
+    default void setUserAuthorities(String sessionId,List<? extends GrantedAuthority> authorities) {
+        System.out.println("======setAuthorities default");
+    }
+
+    /**
+     * 从缓存中读取当前登录用户的权限
+     */
+    default List<? extends GrantedAuthority> getUserAuthorities(String sessionId) {
+        System.out.println("======setAuthorities default");
+        return null;
+    }
+
+    default void clearUserAuthorities(String sessionId) {
+        System.out.println("======clearUserAuthorities default");
+    }
+
+    default void clearAllUserAuthorities() {
+        System.out.println("======clearAllUserAuthorities default");
     }
 
     /**

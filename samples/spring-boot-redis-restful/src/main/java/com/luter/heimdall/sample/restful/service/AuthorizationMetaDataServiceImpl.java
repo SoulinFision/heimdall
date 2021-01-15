@@ -16,15 +16,16 @@
 
 package com.luter.heimdall.sample.restful.service;
 
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
+import com.luter.heimdall.core.authorization.authority.MethodAndUrlGrantedAuthority;
 import com.luter.heimdall.core.authorization.service.AuthorizationMetaDataService;
 import com.luter.heimdall.sample.common.dto.SysResourceDTO;
 import com.luter.heimdall.sample.common.util.DataUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 系统权限数据提供服务
@@ -35,16 +36,25 @@ import java.util.Map;
 @Slf4j
 public class AuthorizationMetaDataServiceImpl implements AuthorizationMetaDataService {
     @Override
-    public Map<String, String> loadAuthorities() {
+    public Map<String, Collection<String>> loadSysAuthorities() {
         final List<SysResourceDTO> resources = DataUtil.getRestfulResourceList();
-        Map<String, String> perms = new LinkedHashMap<>(resources.size());
+        Map<String, Collection<String>> perms = new LinkedHashMap<>(resources.size());
         for (SysResourceDTO sysResourceDTO : resources) {
-            //url +perm 构造拦截器链Map
-            //对于 resful 权限来说，这里的 Perm 无效
-            //这种情况下的 perm 由 method+":"+url 构成
-            //参见：MethodAndUrlGrantedAuthority
-            perms.put(sysResourceDTO.getUrl(), sysResourceDTO.getPerm());
+            //这个 url 需要哪些权限或者角色，匹配其一就可以
+            perms.put(sysResourceDTO.getUrl(), Collections.singletonList(sysResourceDTO.getPerm()));
         }
         return perms;
+    }
+
+    @Override
+    public List<? extends GrantedAuthority> loadUserAuthorities() {
+        final List<SysResourceDTO> resources = DataUtil.getRestfulResourceList();
+        List<SysResourceDTO> adminRes = new ArrayList<>();
+        //用户权限
+        //        admin
+        adminRes.add(resources.get(0));
+        adminRes.add(resources.get(1));
+        return adminRes.stream().map(d -> new MethodAndUrlGrantedAuthority(d.getMethod(), d.getUrl()))
+                .collect(Collectors.toList());
     }
 }

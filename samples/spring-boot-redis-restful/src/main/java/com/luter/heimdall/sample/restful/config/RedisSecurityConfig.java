@@ -20,6 +20,7 @@ package com.luter.heimdall.sample.restful.config;
 import com.luter.heimdall.cache.redis.authorization.RedisAuthorizationMetaDataDao;
 import com.luter.heimdall.cache.redis.session.RedisSessionDaoImpl;
 import com.luter.heimdall.core.authorization.aspect.AuthorizationAnnotationAspect;
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.authorization.dao.AuthorizationMetaDataCacheDao;
 import com.luter.heimdall.core.authorization.handler.AuthorizationFilterHandler;
 import com.luter.heimdall.core.authorization.handler.DefaultAuthorizationFilterHandler;
@@ -42,6 +43,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -64,7 +66,10 @@ public class RedisSecurityConfig {
      */
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-
+    @Autowired
+    private RedisTemplate<String, Collection<String>> stringCollectionRedisTemplate;
+    @Autowired
+    private RedisTemplate<String, List<? extends GrantedAuthority>> userAuthRedisTemplate;
 
     /**
      * Cookie service cookie service.
@@ -87,7 +92,7 @@ public class RedisSecurityConfig {
     public SessionDAO sessionDAO(CookieService cookieService, ServletHolder servletHolder) {
         log.warn("初始化 SessionDAO");
         final RedisSessionDaoImpl redisSessionDao =
-                new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, servletHolder, cookieService);
+                new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, userAuthRedisTemplate, servletHolder, cookieService);
         //Session事件监听
         List<SessionEventListener> listeners = new ArrayList<>();
         listeners.add(new SessionEventListener() {
@@ -156,7 +161,7 @@ public class RedisSecurityConfig {
     @Bean
     public AuthorizationMetaDataCacheDao authorizationMetaDataCacheDao() {
         log.warn("初始化 系统权限数据 MetaDataDao");
-        return new RedisAuthorizationMetaDataDao(stringRedisTemplate);
+        return new RedisAuthorizationMetaDataDao(stringCollectionRedisTemplate);
     }
 
 

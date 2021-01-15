@@ -20,6 +20,7 @@ import com.luter.heimdall.boot.starter.servlet.ServletHolderImpl;
 import com.luter.heimdall.boot.starter.util.JacksonUtils;
 import com.luter.heimdall.core.config.Config;
 import com.luter.heimdall.core.config.ConfigManager;
+import com.luter.heimdall.core.config.property.AuthorityProperty;
 import com.luter.heimdall.core.config.property.CookieProperty;
 import com.luter.heimdall.core.config.property.SchedulerProperty;
 import com.luter.heimdall.core.config.property.SessionProperty;
@@ -52,7 +53,6 @@ public class ServletConfiguration {
     public ServletHolder servletHolder(HeimdallConfig config) {
         log.warn("注册 ServletHolder 实现");
         Config c = new Config();
-        c.setAuthoritiesCachedKey(config.getAuthoritiesCachedKey());
         SchedulerProperty schedulerProperty = new SchedulerProperty();
         BeanUtils.copyProperties(config.getScheduler(), schedulerProperty);
         c.setScheduler(schedulerProperty);
@@ -62,6 +62,10 @@ public class ServletConfiguration {
         CookieProperty cookieProperty = new CookieProperty();
         BeanUtils.copyProperties(config.getCookie(), cookieProperty);
         c.setCookie(cookieProperty);
+        ConfigManager.setConfig(c);
+        AuthorityProperty authorityProperty = new AuthorityProperty();
+        BeanUtils.copyProperties(config.getAuthority(), authorityProperty);
+        c.setAuthority(authorityProperty);
         ConfigManager.setConfig(c);
         log.warn("配置参数初始化完毕:\n{}", JacksonUtils.toPrettyJson(c));
         return new ServletHolderImpl();

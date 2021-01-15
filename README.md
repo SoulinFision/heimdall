@@ -1,8 +1,6 @@
-# Heimdall
+# Heimdall v1.0.2
 
 &emsp;&emsp;**Heimdall** Java Web 认证授权框架，类似于Spring Security 和shiro,实现认证和授权功能. 相比之下,Heimdall框架更加简单，也更容易上手。 支持Session Cookie 认证方式，支持普通Url权限和Restful资源权限， 支持内存缓存和redis缓存。 同时提供了spring-boot-starter， 开箱即用。
-
-
 
 
 ## 技术选型

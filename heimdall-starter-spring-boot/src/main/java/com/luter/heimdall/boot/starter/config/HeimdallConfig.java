@@ -17,6 +17,7 @@
 package com.luter.heimdall.boot.starter.config;
 
 
+import com.luter.heimdall.boot.starter.config.property.AuthorityProperty;
 import com.luter.heimdall.boot.starter.config.property.CookieProperty;
 import com.luter.heimdall.boot.starter.config.property.SchedulerProperty;
 import com.luter.heimdall.boot.starter.config.property.SessionProperty;
@@ -36,11 +37,12 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @Slf4j
 @Data
 public class HeimdallConfig {
-
     /**
-     * 权限缓存key
+     * 系统权限在缓存中保存的时长，单位:小时.
+     * <p>
+     * 超过这个时长将会被清理，默认 :24小时
      */
-    private String authoritiesCachedKey = "heimdall:authorities";
+    private long authoritiesExpire = 24;
     /**
      * Session配置
      */
@@ -56,5 +58,9 @@ public class HeimdallConfig {
      */
     @NestedConfigurationProperty
     private SchedulerProperty scheduler = new SchedulerProperty();
-
+    /**
+     * 权限缓存配置
+     */
+    @NestedConfigurationProperty
+    private AuthorityProperty authority = new AuthorityProperty();
 }

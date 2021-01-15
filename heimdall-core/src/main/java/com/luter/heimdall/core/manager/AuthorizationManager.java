@@ -21,14 +21,17 @@ import com.luter.heimdall.core.authorization.authority.MethodAndUrlGrantedAuthor
 import com.luter.heimdall.core.authorization.authority.SimpleGrantedAuthority;
 import com.luter.heimdall.core.authorization.dao.AuthorizationMetaDataCacheDao;
 import com.luter.heimdall.core.authorization.service.AuthorizationMetaDataService;
+import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.exception.UnAuthorizedException;
 import com.luter.heimdall.core.exception.UnAuthticatedException;
 import com.luter.heimdall.core.session.SimpleSession;
+import com.luter.heimdall.core.session.dao.SessionDAO;
 import com.luter.heimdall.core.utils.PathUtil;
 import com.luter.heimdall.core.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -118,17 +121,17 @@ public class AuthorizationManager {
         String url = request.getRequestURI(), method = request.getMethod();
         //url不空
         if (StrUtils.isNotBlank(url) && StrUtils.isNotBlank(method)) {
-            Map<String, String> authorities = loadSysPermissionFromCache();
+            Map<String, Collection<String>> authorities = getSysAuthorities();
             //系统权限拦截规则不为空，开始授权
             if (null != authorities && !authorities.isEmpty()) {
                 log.debug("系统权限 : {}", authorities);
                 PathUtil antPathMatcherUtil = new PathUtil();
                 //遍历判断
-                for (Map.Entry<String, String> entry : authorities.entrySet()) {
+                for (Map.Entry<String, Collection<String>> entry : authorities.entrySet()) {
                     //要拦截的url
                     final String filterUrl = entry.getKey();
                     //需要的perm授权标识，MethodAndUrlGrantedAuthority模式下无效
-                    final String filterPerm = entry.getValue();
+                    final Collection<String> filterPerm = entry.getValue();
                     //当前请求url是否需要被拦截
                     final boolean match = antPathMatcherUtil.match(filterUrl, url);
                     log.debug("授权= 请求资源:[{}:{}],拦截url:[{}], {}", method, url, filterUrl, match ? "规则匹配,开始授权" : "规则不匹配,忽略");
@@ -157,7 +160,7 @@ public class AuthorizationManager {
                             else if (userAuthority instanceof SimpleGrantedAuthority) {
                                 SimpleGrantedAuthority mga = (SimpleGrantedAuthority) userAuthority;
                                 //如果系统权限需要的Perm标识与用户具有的某个权限标识匹配，则授权通过(不区分大小写)
-                                if (filterPerm.equalsIgnoreCase(mga.getAuthority())) {
+                                if (filterPerm.contains(mga.getAuthority())) {
                                     log.info("普通权限标识符授权= 权限匹配成功. 请求资源: [{}:{}],需要权限标识:[{}],匹配到权限:[{}]", method, url, filterPerm, mga);
                                     return true;
                                 }
@@ -198,12 +201,24 @@ public class AuthorizationManager {
         if (null == currentUser) {
             throw new UnAuthticatedException();
         }
-        final List<? extends GrantedAuthority> authorities = currentUser.getDetails().getAuthorities();
-        //啥权限都没有
-        if (null == authorities || authorities.isEmpty()) {
-            throw new UnAuthorizedException();
+        if (ConfigManager.getConfig().getAuthority().isUserCachedEnabled()) {
+            final SessionDAO sessionDAO = authenticationManager.getSessionDAO();
+            List<? extends GrantedAuthority> userAuthorities = sessionDAO.getUserAuthorities(currentUser.getId());
+            //啥权限都没有
+            if (null == userAuthorities || userAuthorities.isEmpty()) {
+                userAuthorities = authorizationMetaDataService.loadUserAuthorities();
+                if (null == userAuthorities || userAuthorities.isEmpty()) {
+                    throw new UnAuthorizedException();
+                } else {
+                    sessionDAO.setUserAuthorities(currentUser.getId(), userAuthorities);
+                }
+            }
+            return userAuthorities;
+        } else {
+            log.warn("用户权限缓存未启用，直接从数据库获取");
+            return authorizationMetaDataService.loadUserAuthorities();
         }
-        return authorities;
+
     }
 
     /**
@@ -213,21 +228,27 @@ public class AuthorizationManager {
      *
      * @return the map
      */
-    protected Map<String, String> loadSysPermissionFromCache() {
-        Map<String, String> authorities = authorizationDao.getSysAuthorities();
-        if (null == authorities || authorities.isEmpty()) {
-            log.debug("缓存中系统权限为空，尝试从提供者服务获取");
-            final Map<String, String> dbAuthorityMap = authorizationMetaDataService.loadAuthorities();
-            if (null != dbAuthorityMap && dbAuthorityMap.size() > 0) {
-                authorizationDao.setSysAuthorities(dbAuthorityMap);
-                authorities = dbAuthorityMap;
-                log.debug("从提供者服务获取到系统权限总数:{}", authorities.size());
-            } else {
-                log.debug("数据库里也没有查到权限");
+    protected Map<String, Collection<String>> getSysAuthorities() {
+        if (ConfigManager.getConfig().getAuthority().isSysCachedEnabled()) {
+            Map<String, Collection<String>> authorities = authorizationDao.getSysAuthorities();
+            if (null == authorities || authorities.isEmpty()) {
+                log.debug("缓存中系统权限为空，尝试从提供者服务获取");
+                final Map<String, Collection<String>> dbAuthorityMap = authorizationMetaDataService.loadSysAuthorities();
+                if (null != dbAuthorityMap && dbAuthorityMap.size() > 0) {
+                    authorizationDao.setSysAuthorities(dbAuthorityMap);
+                    authorities = dbAuthorityMap;
+                    log.debug("从提供者服务获取到系统权限总数:{}", authorities.size());
+                } else {
+                    log.debug("数据库里也没有查到权限");
+                }
             }
+            log.info("加载到的系统权限:{}", authorities);
+            return authorities;
+        } else {
+            log.warn("系统权限缓存未开启，直接从数据库获取系统权限");
+            return authorizationMetaDataService.loadSysAuthorities();
         }
-        log.info("加载到的系统权限:{}", authorities);
-        return authorities;
+
     }
 
     /**

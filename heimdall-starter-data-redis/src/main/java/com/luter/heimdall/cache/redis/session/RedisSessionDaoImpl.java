@@ -17,8 +17,10 @@
 package com.luter.heimdall.cache.redis.session;
 
 
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.config.Config;
 import com.luter.heimdall.core.config.ConfigManager;
+import com.luter.heimdall.core.config.property.AuthorityProperty;
 import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.exception.*;
@@ -55,6 +57,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      * The Session cache.
      */
     private final RedisTemplate<String, SimpleSession> sessionCache;
+    private final RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache;
 
     /**
      * The Session id generator.
@@ -82,12 +85,17 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      * @param servletHolder   the servlet holder
      * @param cookieProvider  the cookie provider
      */
-    public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, StringRedisTemplate activeUserCache, ServletHolder servletHolder, CookieService cookieProvider) {
+    public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, StringRedisTemplate activeUserCache,
+                               RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache,
+                               ServletHolder servletHolder, CookieService cookieProvider) {
         if (null == sessionCache) {
             throw new SessionException("sessionCache 不能为空");
         }
         if (null == activeUserCache) {
             throw new SessionException("activeUserCache 不能为空");
+        }
+        if (null == userAuthCache) {
+            throw new SessionException("userAuthCache 不能为空");
         }
         final Config config = ConfigManager.getConfig();
         if (config.getCookie().getEnabled()) {
@@ -96,6 +104,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             }
         }
         this.sessionCache = sessionCache;
+        this.userAuthCache = userAuthCache;
         this.sessionIdGenerator = new UUIDSessionIdGeneratorImpl();
         this.activeUserCache = activeUserCache;
         this.servletHolder = servletHolder;
@@ -111,12 +120,17 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      * @param servletHolder      the servlet holder
      * @param cookieProvider     the cookie provider
      */
-    public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, SessionIdGenerator sessionIdGenerator, StringRedisTemplate activeUserCache, ServletHolder servletHolder, CookieService cookieProvider) {
+    public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, SessionIdGenerator sessionIdGenerator,
+                               StringRedisTemplate activeUserCache, RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache,
+                               ServletHolder servletHolder, CookieService cookieProvider) {
         if (null == sessionCache) {
             throw new SessionException("sessionCache 不能为空");
         }
         if (null == activeUserCache) {
             throw new SessionException("activeUserCache 不能为空");
+        }
+        if (null == userAuthCache) {
+            throw new SessionException("userAuthCache 不能为空");
         }
         final Config config = ConfigManager.getConfig();
         if (config.getCookie().getEnabled()) {
@@ -125,37 +139,12 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             }
         }
         this.sessionCache = sessionCache;
+        this.userAuthCache = userAuthCache;
         this.sessionIdGenerator = null == sessionIdGenerator ? new UUIDSessionIdGeneratorImpl() : sessionIdGenerator;
         this.activeUserCache = activeUserCache;
         this.servletHolder = servletHolder;
         this.cookieProvider = cookieProvider;
     }
-
-    /**
-     * Instantiates a new Redis session dao.
-     *
-     * @param sessionCache    the session cache
-     * @param activeUserCache the active user cache
-     */
-    public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, StringRedisTemplate activeUserCache) {
-        if (null == sessionCache) {
-            throw new SessionException("sessionCache 不能为空");
-        }
-        if (null == activeUserCache) {
-            throw new SessionException("activeUserCache 不能为空");
-        }
-        final Config config = ConfigManager.getConfig();
-        if (config.getCookie().getEnabled()) {
-            if (null == servletHolder || null == cookieProvider) {
-                throw new CookieException("请实现或者Set ServletHolder、cookieProvider实现类,或者关闭Cookie功能");
-            }
-        }
-        this.sessionCache = sessionCache;
-        this.activeUserCache = activeUserCache;
-        this.sessionIdGenerator = new UUIDSessionIdGeneratorImpl();
-
-    }
-
 
     @Override
     public SimpleSession create(UserDetails userDetails) {
@@ -201,6 +190,9 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             final String score = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             activeUserCache.opsForZSet().add(getActiveSessionCacheKey(), session.getId(), Long.parseLong(score));
             activeUserCache.opsForHash().put(getActiveUserCacheKey(), session.getDetails().getPrincipal(), session.getId());
+        }
+        if (config.getAuthority().isUserCachedEnabled()) {
+            setUserAuthorities(session.getId(), userDetails.getAuthorities());
         }
         //写入cookie
         if (config.getCookie().getEnabled()) {
@@ -489,6 +481,9 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         return activeUserCache;
     }
 
+    public void setServletHolder(ServletHolder servletHolder) {
+        this.servletHolder = servletHolder;
+    }
 
     @Override
     public ServletHolder getServletHolder() {
@@ -571,5 +566,47 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      */
     private long getEnd(int page, int size) {
         return page * size;
+    }
+
+
+    /////用户权限缓存
+
+
+    @Override
+    public void setUserAuthorities(String sessionId, List<? extends GrantedAuthority> authorities) {
+        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+        if (null != authorities && !authorities.isEmpty()) {
+            userAuthCache.opsForHash().put(authority.getUserCachedKey(), sessionId, authorities);
+            userAuthCache.expire(authority.getUserCachedKey(), authority.getUserExpire(), TimeUnit.HOURS);
+        } else {
+            log.warn("缓存用户权限失败，用户权限为空");
+        }
+    }
+
+    @Override
+    public List<? extends GrantedAuthority> getUserAuthorities(String sessionId) {
+        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+        final Object o = userAuthCache.opsForHash().get(authority.getUserCachedKey(), sessionId);
+        if (null != o) {
+            return StrUtils.castList(o, GrantedAuthority.class);
+        }
+        return null;
+    }
+
+    @Override
+    public void clearUserAuthorities(String sessionId) {
+        if (StrUtils.isNotBlank(sessionId)) {
+            final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+            userAuthCache.opsForHash().delete(authority.getUserCachedKey(), sessionId);
+        } else {
+            log.warn("清理用户权限缓存失败，SessionID 为空");
+        }
+
+    }
+
+    @Override
+    public void clearAllUserAuthorities() {
+        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+        userAuthCache.delete(authority.getUserCachedKey());
     }
 }

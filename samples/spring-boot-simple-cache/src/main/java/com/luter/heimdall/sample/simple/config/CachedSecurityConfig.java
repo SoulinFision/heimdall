@@ -47,6 +47,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -162,14 +163,14 @@ public class CachedSecurityConfig {
     @Bean
     public AuthorizationMetaDataCacheDao authorizationMetaDataCacheDao() {
         log.warn("初始化 系统授权数据 MetaDataDao");
-        Cache<String, Map<String, String>> caffeineCache = Caffeine.newBuilder()
+        Cache<String, Map<String, Collection<String>>> caffeineCache = Caffeine.newBuilder()
                 .expireAfterAccess(Duration.ofHours(1))
                 .recordStats()
                 .build();
 //        Caffeine缓存
-        SimpleCache<String, Map<String, String>> caffeineSimpleCache = new CaffeineCache<>(caffeineCache);
+        SimpleCache<String, Map<String, Collection<String>>> caffeineSimpleCache = new CaffeineCache<>(caffeineCache);
 //        Map 缓存
-        SimpleCache<String, Map<String, String>> mapSimpleCache = new MapCache<>(Maps.newConcurrentMap());
+        SimpleCache<String, Map<String, Collection<String>>> mapSimpleCache = new MapCache<>(Maps.newConcurrentMap());
         return new CachedAuthorizationMetaDataDao(caffeineSimpleCache);
     }
 

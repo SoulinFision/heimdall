@@ -16,14 +16,17 @@
 
 package com.luter.heimdall.cache.redis.authorization;
 
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.authorization.dao.AuthorizationMetaDataCacheDao;
 import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 基于 redis 的系统权限缓存Dao实现
@@ -36,38 +39,65 @@ public class RedisAuthorizationMetaDataDao implements AuthorizationMetaDataCache
     /**
      * The Redis template.
      */
-    private final StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, Collection<String>> redisTemplate;
     /**
      * The Cache key.
      */
     private final String cacheKey;
+    /**
+     * 多久过期
+     */
+    private long expire;
 
     /**
      * Instantiates a new Redis authorization meta data dao.
      *
      * @param redisTemplate the redis template
      */
-    public RedisAuthorizationMetaDataDao(StringRedisTemplate redisTemplate) {
+    public RedisAuthorizationMetaDataDao(RedisTemplate<String, Collection<String>> redisTemplate) {
         this.redisTemplate = redisTemplate;
-        String key = ConfigManager.getConfig().getAuthoritiesCachedKey();
-        cacheKey = StrUtils.isBlank(key) ? AUTHORITIES_CACHED_KEY : key;
+        String key = ConfigManager.getConfig().getAuthority().getSysCachedKey();
+        cacheKey = StrUtils.isBlank(key) ? SYS_AUTHORITIES_CACHED_KEY : key;
+        expire = ConfigManager.getConfig().getAuthority().getSysExpire();
     }
 
     @Override
-    public Map<String, String> getSysAuthorities() {
-        Map<String, String> authorityMap = new LinkedHashMap<>();
+    public void clearSysAuthorities() {
+        redisTemplate.delete(getCacheKey());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, Collection<String>> getSysAuthorities() {
+        Map<String, Collection<String>> authorityMap = new LinkedHashMap<>();
         final Map<Object, Object> entries = redisTemplate.opsForHash().entries(getCacheKey());
         if (!entries.isEmpty()) {
-            entries.forEach((key, grantedAuthority) -> authorityMap.put(key.toString(), grantedAuthority.toString()));
+            entries.forEach((key, grantedAuthority) -> authorityMap.put(key.toString(), (Collection<String>) grantedAuthority));
         }
         log.debug("获取缓存系统权限:\n{}", authorityMap);
         return authorityMap;
     }
 
     @Override
-    public void setSysAuthorities(Map<String, String> authorities) {
+    public void setSysAuthorities(Map<String, Collection<String>> authorities) {
         log.debug("设置缓存系统权限:\n{}", authorities);
         redisTemplate.opsForHash().putAll(getCacheKey(), authorities);
+        redisTemplate.expire(getCacheKey(), getExpire(), TimeUnit.HOURS);
+    }
+
+    @Override
+    public void resetCachedSysAuthorities(Map<String, Collection<String>> authorities) {
+        clearSysAuthorities();
+        setSysAuthorities(authorities);
+    }
+
+
+    public long getExpire() {
+        return expire;
+    }
+
+    public void setExpire(long expire) {
+        this.expire = expire;
     }
 
     /**

@@ -16,6 +16,9 @@
 
 package com.luter.heimdall.core.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The type Str utils.
  *
@@ -27,6 +30,7 @@ public final class StrUtils {
      * The constant COLON.
      */
     public static final String COLON = ":";
+
     /**
      * Is empty boolean.
      *
@@ -96,4 +100,22 @@ public final class StrUtils {
         return !StrUtils.isBlank(str);
     }
 
+    /**
+     * Cast list list.
+     *
+     * @param <T>   the type parameter
+     * @param obj   the obj
+     * @param clazz the clazz
+     * @return the list
+     */
+    public static <T> List<T> castList(Object obj, Class<T> clazz) {
+        List<T> result = new ArrayList<>();
+        if (obj instanceof List<?>) {
+            for (Object o : (List<?>) obj) {
+                result.add(clazz.cast(o));
+            }
+            return result;
+        }
+        return null;
+    }
 }

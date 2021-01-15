@@ -16,6 +16,7 @@
 
 package com.luter.heimdall.core.config;
 
+import com.luter.heimdall.core.config.property.AuthorityProperty;
 import com.luter.heimdall.core.config.property.CookieProperty;
 import com.luter.heimdall.core.config.property.SchedulerProperty;
 import com.luter.heimdall.core.config.property.SessionProperty;
@@ -35,10 +36,6 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class Config {
     /**
-     * 权限在缓存中的key
-     */
-    private String authoritiesCachedKey = "heimdal:authorities";
-    /**
      * Session参数配置
      */
     private SessionProperty session = new SessionProperty();
@@ -50,4 +47,9 @@ public class Config {
      * Session定时清理任务配置
      */
     private SchedulerProperty scheduler = new SchedulerProperty();
+
+    /**
+     * 权限缓存配置
+     */
+    private AuthorityProperty authority = new AuthorityProperty();
 }

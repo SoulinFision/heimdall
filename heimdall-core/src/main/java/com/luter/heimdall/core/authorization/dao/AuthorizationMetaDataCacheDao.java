@@ -16,6 +16,7 @@
 
 package com.luter.heimdall.core.authorization.dao;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -29,7 +30,7 @@ public interface AuthorizationMetaDataCacheDao {
     /**
      * 默认系统权限缓存 Key
      */
-    String AUTHORITIES_CACHED_KEY = "heimdal:authorities";
+    String SYS_AUTHORITIES_CACHED_KEY = "heimdal:authorities";
 
 
     /**
@@ -37,32 +38,27 @@ public interface AuthorizationMetaDataCacheDao {
      *
      * @return the authorities
      */
-    Map<String, String> getSysAuthorities();
+    Map<String, Collection<String>> getSysAuthorities();
+
+    /**
+     * 清理缓存
+     */
+    void clearSysAuthorities();
 
     /**
      * 设置系统权限
      *
      * @param authorities the authorities
      */
-    void setSysAuthorities(Map<String, String> authorities);
+    void setSysAuthorities(Map<String, Collection<String>> authorities);
 
-    /**
-     * 添加一个权限
-     *
-     * @param key   the key
-     * @param value the value
-     */
-    default void addSysAuthority(String key, String value) {
-        System.err.println("======AuthorizationMetaDataCacheDao.addSysAuthority======");
-        System.err.println("======暂未实现======");
-    }
 
     /**
      * 重新载入权限到缓存
      *
      * @param authorities the authorities
      */
-    default void resetCachedSysAuthorities(Map<String, String> authorities) {
+    default void resetCachedSysAuthorities(Map<String, Collection<String>> authorities) {
         System.err.println("======AuthorizationMetaDataCacheDao.resetCachedSysAuthorities======");
         System.err.println("======暂未实现======");
     }
