@@ -28,18 +28,18 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class SimpleGrantedAuthority implements GrantedAuthority {
     /**
-     * 权限标志，一个url对应一个perm。
+     * 权限标志，或者角色标志。
      */
-    private String perm;
+    private String attr;
 
     /**
      * Instantiates a new Simple granted authority.
      *
-     * @param perm 权限标志
+     * @param attr 权限标志 或者角色标志
      */
-    public SimpleGrantedAuthority(String perm) {
+    public SimpleGrantedAuthority(String attr) {
 
-        this.perm = perm;
+        this.attr = attr;
     }
 
     /**
@@ -51,7 +51,7 @@ public class SimpleGrantedAuthority implements GrantedAuthority {
 
     @Override
     public String getAuthority() {
-        return this.perm;
+        return this.attr;
     }
 
     /**
@@ -59,5 +59,6 @@ public class SimpleGrantedAuthority implements GrantedAuthority {
      */
     public void setAuthority() {
     }
+
 
 }

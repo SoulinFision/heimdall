@@ -26,6 +26,17 @@ import java.io.Serializable;
 public interface GrantedAuthority extends Serializable {
     /**
      * 获取权限标志
+     * <p>
+     * 通过注解授权的的时候会用到
+     * 对于 restful 资源，也就是MethodAndUrlGrantedAuthority类型权限，
+     * 权限标志位:METHOD:URL 格式，如：POST:/pet/cat,method 为大写；
+     * <p>
+     * 对于 精确路由 url 资源和角色资源（SimpleGrantedAuthority），
+     * 这种模式下的 url 不重复
+     * 标志为权限标志或者角色标识集合,不区分 method。
+     * <p>
+     * 角色标识如： {"admin","user"}
+     * 权限标识如：{"catSave"}
      *
      * @return the authority
      */

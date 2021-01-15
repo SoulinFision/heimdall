@@ -17,18 +17,20 @@
 package com.luter.heimdall.sample.restful.service;
 
 import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
-import com.luter.heimdall.core.authorization.authority.MethodAndUrlGrantedAuthority;
 import com.luter.heimdall.core.authorization.service.AuthorizationMetaDataService;
-import com.luter.heimdall.sample.common.dto.SysResourceDTO;
 import com.luter.heimdall.sample.common.util.DataUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 系统权限数据提供服务
+ * <p>
+ * <p>
+ * 在 restful 模式下
  *
  * @author Luter
  */
@@ -37,24 +39,27 @@ import java.util.stream.Collectors;
 public class AuthorizationMetaDataServiceImpl implements AuthorizationMetaDataService {
     @Override
     public Map<String, Collection<String>> loadSysAuthorities() {
-        final List<SysResourceDTO> resources = DataUtil.getRestfulResourceList();
-        Map<String, Collection<String>> perms = new LinkedHashMap<>(resources.size());
-        for (SysResourceDTO sysResourceDTO : resources) {
-            //这个 url 需要哪些权限或者角色，匹配其一就可以
-            perms.put(sysResourceDTO.getUrl(), Collections.singletonList(sysResourceDTO.getPerm()));
-        }
-        return perms;
+        ////////////////////////////这里的授权方式要与 UserDetails 中的匹配
+        //restful url 授权
+//        return DataUtil.getRestfulPerm();
+        //精确路由 url 授权
+        return DataUtil.getExactUrlPerms();
+        //角色授权
+//        return DataUtil.getRolePerms();
+        ////////////////////////////这里的授权方式要与 UserDetails 中的匹配
     }
 
     @Override
-    public List<? extends GrantedAuthority> loadUserAuthorities() {
-        final List<SysResourceDTO> resources = DataUtil.getRestfulResourceList();
-        List<SysResourceDTO> adminRes = new ArrayList<>();
-        //用户权限
-        //        admin
-        adminRes.add(resources.get(0));
-        adminRes.add(resources.get(1));
-        return adminRes.stream().map(d -> new MethodAndUrlGrantedAuthority(d.getMethod(), d.getUrl()))
-                .collect(Collectors.toList());
+    public List<? extends GrantedAuthority> loadUserAuthorities(String principal) {
+        log.warn("加载用户 pricipal = [{}] 的权限 ", principal);
+        ////////////////////////////这里的授权方式要与 UserDetails 中的匹配
+        ///restful url 授权
+//        return DataUtil.getUserRestfulPerm(principal);
+        //角色授权
+//        return DataUtil.getUserRolePerms(principal);
+
+        //精确匹配路由 url 授权
+        return DataUtil.getExactUserPerms(principal);
+        ////////////////////////////这里的授权方式要与 UserDetails 中的匹配
     }
 }

@@ -51,7 +51,7 @@ public class SysUserService {
      * @return the user details
      */
     public UserDetails getUserDetailsByUsername(String username) {
-        List<SysUserDTO> findUserList = DataUtil.getRestfulUserList().stream().filter(item -> item.getUsername().equals(username)).collect(Collectors.toList());
+        List<SysUserDTO> findUserList = DataUtil.getSimpleUserList().stream().filter(item -> item.getUsername().equals(username)).collect(Collectors.toList());
         if (findUserList.isEmpty()) {
             throw new AccountException("用户名密码错误");
         }

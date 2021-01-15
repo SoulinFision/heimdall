@@ -171,7 +171,7 @@ public class AuthorizationManager {
                                 return true;
                             }
                         }
-                        log.warn("授权=  请求资源:[{}:{}], 用户所有权限:[{}] ,授权不通过", method, url, userAuthorities);
+                        log.warn("授权=  请求资源:[{}:{}],需要权限:[{}], 用户所有权限:[{}] ,授权不通过", method, url, filterPerm, userAuthorities);
                         if (isThrowEx) {
                             throw new UnAuthorizedException("The current user is not permitted to access resource [" +
                                     method + StrUtils.COLON + url + "] , Access denied.");
@@ -195,28 +195,35 @@ public class AuthorizationManager {
      *
      * @return the user authorities
      */
-    protected List<? extends GrantedAuthority> getUserAuthorities() {
+    public List<? extends GrantedAuthority> getUserAuthorities() {
         final SimpleSession currentUser = authenticationManager.getCurrentUser();
         //没登录
         if (null == currentUser) {
             throw new UnAuthticatedException();
         }
         if (ConfigManager.getConfig().getAuthority().isUserCachedEnabled()) {
+            //从缓存获取用户权限
+            log.warn("用户权限缓存开启,从缓存获取用户权限");
             final SessionDAO sessionDAO = authenticationManager.getSessionDAO();
             List<? extends GrantedAuthority> userAuthorities = sessionDAO.getUserAuthorities(currentUser.getId());
-            //啥权限都没有
+            //缓存中没有，通过接口从数据库获取
             if (null == userAuthorities || userAuthorities.isEmpty()) {
-                userAuthorities = authorizationMetaDataService.loadUserAuthorities();
+                log.warn("用户权限缓存开启,通过接口从数据库获取");
+                userAuthorities = authorizationMetaDataService.loadUserAuthorities(currentUser.getDetails().getPrincipal());
+                //数据库也没有，抛出无权限异常
                 if (null == userAuthorities || userAuthorities.isEmpty()) {
+                    log.warn("用户权限缓存开启,从数据库未获取到任何用户权限，访问拒绝");
                     throw new UnAuthorizedException();
                 } else {
+                    //把数据库获取到的权限进行缓存
                     sessionDAO.setUserAuthorities(currentUser.getId(), userAuthorities);
+                    log.warn("用户权限缓存开启,从数据库获取到的用户权限\n{}", userAuthorities);
                 }
             }
             return userAuthorities;
         } else {
             log.warn("用户权限缓存未启用，直接从数据库获取");
-            return authorizationMetaDataService.loadUserAuthorities();
+            return authorizationMetaDataService.loadUserAuthorities(currentUser.getDetails().getPrincipal());
         }
 
     }
@@ -228,7 +235,7 @@ public class AuthorizationManager {
      *
      * @return the map
      */
-    protected Map<String, Collection<String>> getSysAuthorities() {
+    public Map<String, Collection<String>> getSysAuthorities() {
         if (ConfigManager.getConfig().getAuthority().isSysCachedEnabled()) {
             Map<String, Collection<String>> authorities = authorizationDao.getSysAuthorities();
             if (null == authorities || authorities.isEmpty()) {

@@ -23,7 +23,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 模拟系统用户对象
@@ -56,15 +55,5 @@ public class SysUserDTO implements Serializable {
      * The Enabled.
      */
     private Boolean enabled;
-    /**
-     * 权限就不给前端了
-     */
-    @JsonIgnore
-    List<SysResourceDTO> resources;
-    /**
-     * 角色也不给前端了
-     */
-    @JsonIgnore
-    List<String> roles;
 
 }

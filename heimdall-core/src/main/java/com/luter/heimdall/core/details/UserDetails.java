@@ -16,12 +16,7 @@
 
 package com.luter.heimdall.core.details;
 
-import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
-import com.luter.heimdall.core.authorization.authority.MethodAndUrlGrantedAuthority;
-import com.luter.heimdall.core.authorization.authority.SimpleGrantedAuthority;
-
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * The interface User details.
@@ -49,22 +44,6 @@ public interface UserDetails extends Serializable {
      * @return the boolean
      */
     boolean enabled();
-
-    /**
-     * 此用户拥有的角色
-     *
-     * @return the roles
-     */
-    List<String> getRoles();
-
-    /**
-     * 此用户具备的权限标识符
-     *
-     * @return the permission
-     * @see MethodAndUrlGrantedAuthority
-     * @see SimpleGrantedAuthority
-     */
-    List<? extends GrantedAuthority> getAuthorities();
 
 
 }

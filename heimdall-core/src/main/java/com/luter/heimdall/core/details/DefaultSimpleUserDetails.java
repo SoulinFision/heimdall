@@ -16,10 +16,6 @@
 
 package com.luter.heimdall.core.details;
 
-import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
-
-import java.util.List;
-
 /**
  * 默认基本用户详情类
  *
@@ -50,14 +46,6 @@ public class DefaultSimpleUserDetails implements UserDetails {
      * The Enabled.
      */
     private boolean enabled;
-    /**
-     * The Authorities.
-     */
-    private List<? extends GrantedAuthority> authorities;
-    /**
-     * The Roles.
-     */
-    private List<String> roles;
 
     @Override
     public String getPrincipal() {
@@ -69,15 +57,6 @@ public class DefaultSimpleUserDetails implements UserDetails {
         return enabled;
     }
 
-    @Override
-    public List<String> getRoles() {
-        return roles;
-    }
-
-    @Override
-    public List<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
-    }
 
     /**
      * Sets principal.
@@ -88,24 +67,6 @@ public class DefaultSimpleUserDetails implements UserDetails {
         this.principal = principal;
     }
 
-
-    /**
-     * Sets authorities.
-     *
-     * @param authorities the authorities
-     */
-    public void setAuthorities(List<? extends GrantedAuthority> authorities) {
-        this.authorities = authorities;
-    }
-
-    /**
-     * Sets roles.
-     *
-     * @param roles the roles
-     */
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
 
     /**
      * Is enabled boolean.

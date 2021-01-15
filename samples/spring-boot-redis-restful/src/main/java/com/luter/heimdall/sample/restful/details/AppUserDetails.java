@@ -16,8 +16,6 @@
 
 package com.luter.heimdall.sample.restful.details;
 
-import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
-import com.luter.heimdall.core.authorization.authority.MethodAndUrlGrantedAuthority;
 import com.luter.heimdall.core.details.DefaultSimpleUserDetails;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.sample.common.dto.SysUserDTO;
@@ -26,9 +24,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 自定义用户详情实体
@@ -51,14 +46,6 @@ public class AppUserDetails implements UserDetails {
      * The Principal.
      */
     private String principal;
-    /**
-     * The Authorities.
-     */
-    private List<? extends GrantedAuthority> authorities;
-    /**
-     * The Roles.
-     */
-    private List<String> roles;
 
     /**
      * Instantiates a new Default user detail.
@@ -77,19 +64,6 @@ public class AppUserDetails implements UserDetails {
     @Override
     public boolean enabled() {
         return user.getEnabled();
-    }
-
-
-    @Override
-    public List<String> getRoles() {
-        return user.getRoles();
-    }
-
-    @Override
-    public List<? extends GrantedAuthority> getAuthorities() {
-        //构造 Restful url授权权限信息载体
-        return user.getResources().stream().map(d -> new MethodAndUrlGrantedAuthority(d.getMethod(), d.getUrl()))
-                .collect(Collectors.toList());
     }
 
     /**
@@ -120,21 +94,4 @@ public class AppUserDetails implements UserDetails {
     }
 
 
-    /**
-     * Sets authorities.
-     *
-     * @param authorities the authorities
-     */
-    public void setAuthorities(List<? extends GrantedAuthority> authorities) {
-        this.authorities = authorities;
-    }
-
-    /**
-     * Sets roles.
-     *
-     * @param roles the roles
-     */
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
 }

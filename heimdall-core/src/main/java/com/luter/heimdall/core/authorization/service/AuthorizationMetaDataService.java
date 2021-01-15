@@ -62,5 +62,5 @@ public interface AuthorizationMetaDataService {
     /**
      * 加载用户权限
      */
-    List<? extends GrantedAuthority> loadUserAuthorities();
+    List<? extends GrantedAuthority> loadUserAuthorities(String principal);
 }

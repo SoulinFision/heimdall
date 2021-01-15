@@ -30,7 +30,7 @@ public interface AuthorizationMetaDataCacheDao {
     /**
      * 默认系统权限缓存 Key
      */
-    String SYS_AUTHORITIES_CACHED_KEY = "heimdal:authorities";
+    String SYS_AUTHORITIES_CACHED_KEY = "heimdal:sysAuthorities";
 
 
     /**

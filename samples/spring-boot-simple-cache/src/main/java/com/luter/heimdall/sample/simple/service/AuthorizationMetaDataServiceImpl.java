@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class AuthorizationMetaDataServiceImpl implements AuthorizationMetaDataService {
     @Override
     public Map<String, Collection<String>> loadSysAuthorities() {
-        final List<SysResourceDTO> resources = DataUtil.getSimpleResourceList();
+        final List<SysResourceDTO> resources = DataUtil.getExactUrlResourceList();
         //需要保证顺序
         Map<String, Collection<String>> perms = new LinkedHashMap<>(resources.size());
         for (SysResourceDTO sysResourceDTO : resources) {
@@ -49,11 +49,8 @@ public class AuthorizationMetaDataServiceImpl implements AuthorizationMetaDataSe
     }
 
     @Override
-    public List<? extends GrantedAuthority> loadUserAuthorities() {
-        final List<SysResourceDTO> resources = DataUtil.getSimpleResourceList();
-
-
-
+    public List<? extends GrantedAuthority> loadUserAuthorities(String principal) {
+        final List<SysResourceDTO> resources = DataUtil.getExactUrlResourceList();
         return resources.stream().map(d -> new SimpleGrantedAuthority(d.getPerm())).collect(Collectors.toList());
     }
 }

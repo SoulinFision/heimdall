@@ -191,9 +191,6 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             activeUserCache.opsForZSet().add(getActiveSessionCacheKey(), session.getId(), Long.parseLong(score));
             activeUserCache.opsForHash().put(getActiveUserCacheKey(), session.getDetails().getPrincipal(), session.getId());
         }
-        if (config.getAuthority().isUserCachedEnabled()) {
-            setUserAuthorities(session.getId(), userDetails.getAuthorities());
-        }
         //写入cookie
         if (config.getCookie().getEnabled()) {
             if (null != cookieProvider) {

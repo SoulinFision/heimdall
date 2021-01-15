@@ -19,6 +19,7 @@ package com.luter.heimdall.core.authorization.handler;
 import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.exception.UnAuthticatedException;
 import com.luter.heimdall.core.manager.AuthenticationManager;
+import com.luter.heimdall.core.manager.AuthorizationManager;
 import com.luter.heimdall.core.session.SimpleSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,13 +35,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DefaultAuthorizationFilterHandler extends AbstractAuthorizationFilterHandler implements AuthorizationFilterHandler {
 
+
     /**
-     * Instantiates a new Default security filter handler.
+     * Instantiates a new Abstract security filter handler.
      *
      * @param authenticationManager the authentication manager
+     * @param authorizationManager  the authorization manager
      */
-    public DefaultAuthorizationFilterHandler(AuthenticationManager authenticationManager) {
-        super(authenticationManager);
+    public DefaultAuthorizationFilterHandler(AuthenticationManager authenticationManager,
+                                             AuthorizationManager authorizationManager) {
+        super(authenticationManager, authorizationManager);
     }
 
     @Override
@@ -50,36 +54,36 @@ public class DefaultAuthorizationFilterHandler extends AbstractAuthorizationFilt
 
     @Override
     public boolean hasRole(String role) {
-        return hasIdentifier(getUser().getDetails().getRoles(), role);
+        return hasPermission(role);
     }
 
     @Override
     public boolean hasAnyRoles(String... roles) {
-        return hasAnyIdentifiers(getUser().getDetails().getRoles(), roles);
+        return hasAnyPermissions(roles);
     }
 
     @Override
     public boolean hasAllRoles(String... roles) {
-        return hasAllIdentifiers(getUser().getDetails().getRoles(), roles);
+        return hasAllPermissions(roles);
     }
 
     @Override
     public boolean hasPermission(String perm) {
-        final List<? extends GrantedAuthority> permStrList = getUser().getDetails().getAuthorities();
+        final List<? extends GrantedAuthority> permStrList = getAuthorizationManager().getUserAuthorities();
         final List<String> collect = permStrList.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         return hasIdentifier(collect, perm);
     }
 
     @Override
     public boolean hasAnyPermissions(String... perms) {
-        final List<? extends GrantedAuthority> permStrList = getUser().getDetails().getAuthorities();
+        final List<? extends GrantedAuthority> permStrList = getAuthorizationManager().getUserAuthorities();
         final List<String> collect = permStrList.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         return hasAnyIdentifiers(collect, perms);
     }
 
     @Override
     public boolean hasAllPermissions(String... perms) {
-        final List<? extends GrantedAuthority> permStrList = getUser().getDetails().getAuthorities();
+        final List<? extends GrantedAuthority> permStrList = getAuthorizationManager().getUserAuthorities();
         final List<String> collect = permStrList.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         return hasAllIdentifiers(collect, perms);
     }

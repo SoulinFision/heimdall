@@ -192,9 +192,10 @@ public class CachedSecurityConfig {
      * 授权校验
      */
     @Bean
-    public AuthorizationFilterHandler securityFilterHandler(AuthenticationManager authenticationManager) {
+    public AuthorizationFilterHandler securityFilterHandler(AuthenticationManager authenticationManager
+            , AuthorizationManager authorizationManager) {
         log.warn("初始化 授权过滤器");
-        return new DefaultAuthorizationFilterHandler(authenticationManager);
+        return new DefaultAuthorizationFilterHandler(authenticationManager, authorizationManager);
     }
 
     /**

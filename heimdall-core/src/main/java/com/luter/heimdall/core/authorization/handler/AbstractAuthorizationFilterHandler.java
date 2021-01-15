@@ -17,6 +17,7 @@
 package com.luter.heimdall.core.authorization.handler;
 
 import com.luter.heimdall.core.manager.AuthenticationManager;
+import com.luter.heimdall.core.manager.AuthorizationManager;
 import com.luter.heimdall.core.session.SimpleSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,15 +35,21 @@ public abstract class AbstractAuthorizationFilterHandler {
      * The Authentication manager.
      */
     private final AuthenticationManager authenticationManager;
+    /**
+     * The Authorization manager.
+     */
+    private final AuthorizationManager authorizationManager;
 
 
     /**
      * Instantiates a new Abstract security filter handler.
      *
      * @param authenticationManager the authentication manager
+     * @param authorizationManager  the authorization manager
      */
-    public AbstractAuthorizationFilterHandler(AuthenticationManager authenticationManager) {
+    public AbstractAuthorizationFilterHandler(AuthenticationManager authenticationManager, AuthorizationManager authorizationManager) {
         this.authenticationManager = authenticationManager;
+        this.authorizationManager = authorizationManager;
     }
 
     /**
@@ -96,5 +103,18 @@ public abstract class AbstractAuthorizationFilterHandler {
             }
         }
         return false;
+    }
+
+    /**
+     * Gets authentication manager.
+     *
+     * @return the authentication manager
+     */
+    public AuthenticationManager getAuthenticationManager() {
+        return authenticationManager;
+    }
+
+    public AuthorizationManager getAuthorizationManager() {
+        return authorizationManager;
     }
 }

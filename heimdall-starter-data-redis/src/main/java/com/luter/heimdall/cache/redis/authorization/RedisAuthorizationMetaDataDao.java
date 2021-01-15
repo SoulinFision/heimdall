@@ -16,7 +16,6 @@
 
 package com.luter.heimdall.cache.redis.authorization;
 
-import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.authorization.dao.AuthorizationMetaDataCacheDao;
 import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.utils.StrUtils;

@@ -29,11 +29,9 @@ import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.cookie.SessionCookieServiceImpl;
 import com.luter.heimdall.core.manager.AuthenticationManager;
 import com.luter.heimdall.core.manager.AuthorizationManager;
-import com.luter.heimdall.core.manager.listener.AuthenticationEventListener;
 import com.luter.heimdall.core.servlet.ServletHolder;
 import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.core.session.dao.SessionDAO;
-import com.luter.heimdall.core.session.listener.SessionEventListener;
 import com.luter.heimdall.core.session.scheduler.DefaultInvalidSessionClearScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +40,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -94,34 +91,34 @@ public class RedisSecurityConfig {
         final RedisSessionDaoImpl redisSessionDao =
                 new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, userAuthRedisTemplate, servletHolder, cookieService);
         //Session事件监听
-        List<SessionEventListener> listeners = new ArrayList<>();
-        listeners.add(new SessionEventListener() {
-            @Override
-            public void afterCreated(SimpleSession session) {
-                log.warn("Session 事件 : Session 成功创建:{}", session.getId());
-            }
-
-            @Override
-            public void afterRead(SimpleSession session) {
-                log.warn("Session 事件 : afterRead :{}", session.getId());
-            }
-
-            @Override
-            public void afterUpdated(SimpleSession session) {
-                log.warn("Session 事件 : afterUpdated :{}", session.getId());
-            }
-
-            @Override
-            public void afterDeleted(SimpleSession session) {
-                log.warn("Session 事件 : afterDeleted :{}", session.getId());
-            }
-
-            @Override
-            public void afterSessionValidScheduled() {
-                log.warn("Session 事件 : afterSessionValidScheduled");
-            }
-        });
-        redisSessionDao.setListeners(listeners);
+//        List<SessionEventListener> listeners = new ArrayList<>();
+//        listeners.add(new SessionEventListener() {
+//            @Override
+//            public void afterCreated(SimpleSession session) {
+//                log.warn("Session 事件 : Session 成功创建:{}", session.getId());
+//            }
+//
+//            @Override
+//            public void afterRead(SimpleSession session) {
+//                log.warn("Session 事件 : afterRead :{}", session.getId());
+//            }
+//
+//            @Override
+//            public void afterUpdated(SimpleSession session) {
+//                log.warn("Session 事件 : afterUpdated :{}", session.getId());
+//            }
+//
+//            @Override
+//            public void afterDeleted(SimpleSession session) {
+//                log.warn("Session 事件 : afterDeleted :{}", session.getId());
+//            }
+//
+//            @Override
+//            public void afterSessionValidScheduled() {
+//                log.warn("Session 事件 : afterSessionValidScheduled");
+//            }
+//        });
+//        redisSessionDao.setListeners(listeners);
         return redisSessionDao;
     }
 
@@ -135,21 +132,21 @@ public class RedisSecurityConfig {
     public AuthenticationManager authenticationManager(SessionDAO sessionDAO) {
         log.warn("初始化 认证管理器");
         final AuthenticationManager authenticationManager = new AuthenticationManager(sessionDAO);
-        List<AuthenticationEventListener> listeners = new ArrayList<>();
-        listeners.add(new AuthenticationEventListener() {
-            @Override
-            public void onLogin(int code, SimpleSession session) {
-                log.warn("认证 事件: 用户:[{}] {}"
-                        , session.getDetails().getPrincipal()
-                        , 1 == code ? "重复登录" : 2 == code ? "登录" : "");
-            }
-
-            @Override
-            public void onLogout(SimpleSession session) {
-                log.warn("认证 事件: 用户:[{}] 注销啦", session.getDetails().getPrincipal());
-            }
-        });
-        authenticationManager.setListeners(listeners);
+//        List<AuthenticationEventListener> listeners = new ArrayList<>();
+//        listeners.add(new AuthenticationEventListener() {
+//            @Override
+//            public void onLogin(int code, SimpleSession session) {
+//                log.warn("认证 事件: 用户:[{}] {}"
+//                        , session.getDetails().getPrincipal()
+//                        , 1 == code ? "重复登录" : 2 == code ? "登录" : "");
+//            }
+//
+//            @Override
+//            public void onLogout(SimpleSession session) {
+//                log.warn("认证 事件: 用户:[{}] 注销啦", session.getDetails().getPrincipal());
+//            }
+//        });
+//        authenticationManager.setListeners(listeners);
         return authenticationManager;
     }
 
@@ -186,9 +183,10 @@ public class RedisSecurityConfig {
      * @return the authorization filter handler
      */
     @Bean
-    public AuthorizationFilterHandler authorizationFilterHandler(AuthenticationManager authenticationManager) {
+    public AuthorizationFilterHandler authorizationFilterHandler(AuthenticationManager authenticationManager,
+                                                                 AuthorizationManager authorizationManager) {
         log.warn("初始化 授权过滤器");
-        return new DefaultAuthorizationFilterHandler(authenticationManager);
+        return new DefaultAuthorizationFilterHandler(authenticationManager, authorizationManager);
     }
 
     /**
