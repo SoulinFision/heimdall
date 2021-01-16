@@ -1,5 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.luter.heimdall.cache.redis.listener.RedisMessageListenerAutoConfiguration,\
-  com.luter.heimdall.cache.redis.config.AbstractHeimdallRedisConfig,\
+  com.luter.heimdall.cache.redis.config.HeimdallRedisConfig,\
   com.luter.heimdall.cache.redis.listener.RedisSessionKeyExpirationListener,\
   com.luter.heimdall.cache.redis.listener.RedisSessionKeyDeletedListener

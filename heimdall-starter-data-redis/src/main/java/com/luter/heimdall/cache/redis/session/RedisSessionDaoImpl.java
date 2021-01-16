@@ -1,17 +1,19 @@
 /*
- *    Copyright 2020-2021 Luter.me
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *  *    Copyright 2020-2021 Luter.me
+ *  *
+ *  *    Licensed under the Apache License, Version 2.0 (the "License");
+ *  *    you may not use this file except in compliance with the License.
+ *  *    You may obtain a copy of the License at
+ *  *
+ *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  *    Unless required by applicable law or agreed to in writing, software
+ *  *    distributed under the License is distributed on an "AS IS" BASIS,
+ *  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *    See the License for the specific language governing permissions and
+ *  *    limitations under the License.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
  */
 
 package com.luter.heimdall.cache.redis.session;
@@ -81,13 +83,13 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
 
 
     /**
-     * Instantiates a new Redis session dao.
+     * Session Redis 缓存 DAO 默认实现
      *
-     * @param sessionCache    the session cache
-     * @param activeUserCache the active user cache
-     * @param userAuthCache   the user auth cache
-     * @param servletHolder   the servlet holder
-     * @param cookieProvider  the cookie provider
+     * @param sessionCache    Session 缓存 RedisTemplate
+     * @param activeUserCache 在线用户缓存 RedisTemplate
+     * @param userAuthCache   用户权限缓存 RedisTemplate
+     * @param servletHolder   Request 请求持有实现
+     * @param cookieProvider  Cookie 生成实现
      */
     public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, StringRedisTemplate activeUserCache,
                                RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache,
@@ -110,42 +112,6 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         this.sessionCache = sessionCache;
         this.userAuthCache = userAuthCache;
         this.sessionIdGenerator = new UUIDSessionIdGeneratorImpl();
-        this.activeUserCache = activeUserCache;
-        this.servletHolder = servletHolder;
-        this.cookieProvider = cookieProvider;
-    }
-
-    /**
-     * Instantiates a new Redis session dao.
-     *
-     * @param sessionCache       the session cache
-     * @param sessionIdGenerator the session id generator
-     * @param activeUserCache    the active user cache
-     * @param userAuthCache      the user auth cache
-     * @param servletHolder      the servlet holder
-     * @param cookieProvider     the cookie provider
-     */
-    public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, SessionIdGenerator sessionIdGenerator,
-                               StringRedisTemplate activeUserCache, RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache,
-                               ServletHolder servletHolder, CookieService cookieProvider) {
-        if (null == sessionCache) {
-            throw new SessionException("sessionCache 不能为空");
-        }
-        if (null == activeUserCache) {
-            throw new SessionException("activeUserCache 不能为空");
-        }
-        if (null == userAuthCache) {
-            throw new SessionException("userAuthCache 不能为空");
-        }
-        final Config config = ConfigManager.getConfig();
-        if (config.getCookie().getEnabled()) {
-            if (null == servletHolder || null == cookieProvider) {
-                throw new CookieException("请实现或者Set ServletHolder、cookieProvider实现类,或者关闭Cookie功能");
-            }
-        }
-        this.sessionCache = sessionCache;
-        this.userAuthCache = userAuthCache;
-        this.sessionIdGenerator = null == sessionIdGenerator ? new UUIDSessionIdGeneratorImpl() : sessionIdGenerator;
         this.activeUserCache = activeUserCache;
         this.servletHolder = servletHolder;
         this.cookieProvider = cookieProvider;
@@ -401,7 +367,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         final Set<String> validSessions = sessionCache.keys(getSessionIdPrefix() + "*");
         //如果当前就没有登录用户，Hash 和 Zset全部清空
         if (null == validSessions || validSessions.isEmpty()) {
-            log.info("没合法的SessionId,Hash 和 Zset全部清空");
+            log.info("没合法的SessionId, Hash 、Zset、用户权限缓存 全部清空");
             activeUserCache.delete(config.getSession().getActiveUserCacheKey());
             activeUserCache.delete(config.getSession().getActiveSessionCacheKey());
             //缓存的所有用户权限也全部清除
@@ -449,6 +415,81 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         }
         //发布事件
         afterSessionValidScheduled();
+    }
+
+    /**
+     * 清理 zset 缓存和 hash 缓存
+     * <p>
+     * 主要提供给 redis 事件使用
+     */
+    @Override
+    public void clearOnlineUserCache(String sessionId) {
+        final Config config = ConfigManager.getConfig();
+        //清理用户的权限缓存
+        log.debug("清理用户权限缓存,SessionId:[{}]", sessionId);
+        userAuthCache.opsForHash().delete(config.getAuthority().getUserCachedKey(), sessionId);
+        log.debug("Session 删除事件 ,key:[{}],从zSet删除", sessionId);
+        //删除ZSet中对应Key (SessionId)
+        final Long session = activeUserCache.opsForZSet().remove(config.getSession().getActiveSessionCacheKey(), sessionId);
+        log.debug("Session 删除事件 ,key:[{}],从 Session zSet 删除，结果:{}", sessionId, session);
+        //拿到 Hash 中所有数据
+        final Map<Object, Object> entries = activeUserCache.opsForHash().entries(config.getSession().getActiveUserCacheKey());
+        List<String> toBeDeleted = new ArrayList<>();
+        if (!entries.isEmpty()) {
+            //遍历，如果value(sessionId)  与传入的SessionId相同,把key加入待删除List
+            for (Map.Entry<Object, Object> data : entries.entrySet()) {
+                if (data.getValue().equals(sessionId)) {
+                    toBeDeleted.add(data.getKey().toString());
+                }
+            }
+        }
+        // Hash 中有数据要删除
+        if (!toBeDeleted.isEmpty()) {
+            final Long user = activeUserCache.opsForHash().delete(config.getSession().getActiveUserCacheKey(), toBeDeleted.toArray());
+            log.debug("Session 删除事件 ,key:[{}],从 User Hash 删除，结果:{}", sessionId, user);
+        }
+    }
+
+    /////用户权限缓存
+
+
+    @Override
+    public void setUserAuthorities(String sessionId, List<? extends GrantedAuthority> authorities) {
+        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+        if (null != authorities && !authorities.isEmpty()) {
+            userAuthCache.opsForHash().put(authority.getUserCachedKey(), sessionId, authorities);
+            userAuthCache.expire(authority.getUserCachedKey(), authority.getUserExpire(), TimeUnit.HOURS);
+        } else {
+            log.warn("缓存用户权限失败，用户权限为空");
+        }
+    }
+
+    @Override
+    public List<? extends GrantedAuthority> getUserAuthorities(String sessionId) {
+        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+        final Object o = userAuthCache.opsForHash().get(authority.getUserCachedKey(), sessionId);
+        if (null != o) {
+            return StrUtils.castList(o, GrantedAuthority.class);
+        }
+        return null;
+    }
+
+    @Override
+    public void clearUserAuthorities(String sessionId) {
+        if (StrUtils.isNotBlank(sessionId)) {
+            final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+            log.warn("清理系统用户缓存，SessionId:[{}]", sessionId);
+            userAuthCache.opsForHash().delete(authority.getUserCachedKey(), sessionId);
+        } else {
+            log.warn("清理用户权限缓存失败，SessionID 为空");
+        }
+
+    }
+
+    @Override
+    public void clearAllUserAuthorities() {
+        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+        userAuthCache.delete(authority.getUserCachedKey());
     }
 
     /**
@@ -580,79 +621,4 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         return page * size;
     }
 
-
-    /**
-     * 清理 zset 缓存和 hash 缓存
-     * <p>
-     * 主要提供给 redis 事件使用
-     */
-    @Override
-    public void clearOnlineUserCache(String sessionId) {
-        final Config config = ConfigManager.getConfig();
-        //清理用户的权限缓存
-        log.warn("清理用户权限缓存,SessionId:[{}]", sessionId);
-        userAuthCache.opsForHash().delete(config.getAuthority().getUserCachedKey(), sessionId);
-        log.info("Session 删除事件 ,key:[{}],从zSet删除", sessionId);
-        //删除ZSet中对应Key (SessionId)
-        final Long session = activeUserCache.opsForZSet().remove(config.getSession().getActiveSessionCacheKey(), sessionId);
-        log.info("Session 删除事件 ,key:[{}],从 Session zSet 删除，结果:{}", sessionId, session);
-        //拿到 Hash 中所有数据
-        final Map<Object, Object> entries = activeUserCache.opsForHash().entries(config.getSession().getActiveUserCacheKey());
-        List<String> toBeDeleted = new ArrayList<>();
-        if (!entries.isEmpty()) {
-            //遍历，如果value(sessionId)  与传入的SessionId相同,把key加入待删除List
-            for (Map.Entry<Object, Object> data : entries.entrySet()) {
-                if (data.getValue().equals(sessionId)) {
-                    toBeDeleted.add(data.getKey().toString());
-                }
-            }
-        }
-        // Hash 中有数据要删除
-        if (!toBeDeleted.isEmpty()) {
-            final Long user = activeUserCache.opsForHash().delete(config.getSession().getActiveUserCacheKey(), toBeDeleted.toArray());
-            log.info("Session 删除事件 ,key:[{}],从 User Hash 删除，结果:{}", sessionId, user);
-        }
-    }
-
-    /////用户权限缓存
-
-
-    @Override
-    public void setUserAuthorities(String sessionId, List<? extends GrantedAuthority> authorities) {
-        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
-        if (null != authorities && !authorities.isEmpty()) {
-            userAuthCache.opsForHash().put(authority.getUserCachedKey(), sessionId, authorities);
-            userAuthCache.expire(authority.getUserCachedKey(), authority.getUserExpire(), TimeUnit.HOURS);
-        } else {
-            log.warn("缓存用户权限失败，用户权限为空");
-        }
-    }
-
-    @Override
-    public List<? extends GrantedAuthority> getUserAuthorities(String sessionId) {
-        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
-        final Object o = userAuthCache.opsForHash().get(authority.getUserCachedKey(), sessionId);
-        if (null != o) {
-            return StrUtils.castList(o, GrantedAuthority.class);
-        }
-        return null;
-    }
-
-    @Override
-    public void clearUserAuthorities(String sessionId) {
-        if (StrUtils.isNotBlank(sessionId)) {
-            final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
-            log.warn("清理系统用户缓存，SessionId:[{}]", sessionId);
-            userAuthCache.opsForHash().delete(authority.getUserCachedKey(), sessionId);
-        } else {
-            log.warn("清理用户权限缓存失败，SessionID 为空");
-        }
-
-    }
-
-    @Override
-    public void clearAllUserAuthorities() {
-        final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
-        userAuthCache.delete(authority.getUserCachedKey());
-    }
 }

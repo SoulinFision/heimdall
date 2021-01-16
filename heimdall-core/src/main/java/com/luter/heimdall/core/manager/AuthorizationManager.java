@@ -1,17 +1,19 @@
 /*
- *    Copyright 2020-2021 Luter.me
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *  *    Copyright 2020-2021 Luter.me
+ *  *
+ *  *    Licensed under the Apache License, Version 2.0 (the "License");
+ *  *    you may not use this file except in compliance with the License.
+ *  *    You may obtain a copy of the License at
+ *  *
+ *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  *    Unless required by applicable law or agreed to in writing, software
+ *  *    distributed under the License is distributed on an "AS IS" BASIS,
+ *  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *    See the License for the specific language governing permissions and
+ *  *    limitations under the License.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
  */
 
 package com.luter.heimdall.core.manager;
@@ -209,7 +211,7 @@ public class AuthorizationManager {
             //缓存中没有，通过接口从数据库获取
             if (null == userAuthorities || userAuthorities.isEmpty()) {
                 log.warn("用户权限缓存开启,通过接口从数据库获取");
-                userAuthorities = authorizationMetaDataService.loadUserAuthorities(currentUser.getDetails().getPrincipal());
+                userAuthorities = authorizationMetaDataService.loadUserAuthorities(currentUser);
                 //数据库也没有，抛出无权限异常
                 if (null == userAuthorities || userAuthorities.isEmpty()) {
                     log.warn("用户权限缓存开启,从数据库未获取到任何用户权限，访问拒绝");
@@ -223,7 +225,7 @@ public class AuthorizationManager {
             return userAuthorities;
         } else {
             log.warn("用户权限缓存未启用，直接从数据库获取");
-            return authorizationMetaDataService.loadUserAuthorities(currentUser.getDetails().getPrincipal());
+            return authorizationMetaDataService.loadUserAuthorities(currentUser);
         }
 
     }

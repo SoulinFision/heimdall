@@ -1,17 +1,19 @@
 /*
- *    Copyright 2020-2021 Luter.me
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *  *    Copyright 2020-2021 Luter.me
+ *  *
+ *  *    Licensed under the Apache License, Version 2.0 (the "License");
+ *  *    you may not use this file except in compliance with the License.
+ *  *    You may obtain a copy of the License at
+ *  *
+ *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  *    Unless required by applicable law or agreed to in writing, software
+ *  *    distributed under the License is distributed on an "AS IS" BASIS,
+ *  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *    See the License for the specific language governing permissions and
+ *  *    limitations under the License.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
  */
 
 package com.luter.heimdall.cache.redis.config;
@@ -37,6 +39,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.session.SimpleSession;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -62,7 +65,7 @@ import java.util.TimeZone;
  */
 @Slf4j
 @Configuration
-public class AbstractHeimdallRedisConfig {
+public class HeimdallRedisConfig {
     /**
      * Session Redis 缓存配置
      *
@@ -81,10 +84,16 @@ public class AbstractHeimdallRedisConfig {
         redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.afterPropertiesSet();
-        log.warn(" Session 缓存 RedisTemplate<String, SimpleSession> redisTemplate  初始化.  ");
+        log.info(" Session 缓存 RedisTemplate<String, SimpleSession> redisTemplate  初始化.  ");
         return redisTemplate;
     }
 
+    /**
+     * 系统权限 缓存 redis 配置
+     *
+     * @param factory the factory
+     * @return the redis template
+     */
     @Bean
     public RedisTemplate<String, Collection<String>> stringCollectionRedisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Collection<String>> redisTemplate = new RedisTemplate<>();
@@ -97,10 +106,16 @@ public class AbstractHeimdallRedisConfig {
         redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.afterPropertiesSet();
-        log.warn("系统权限缓存 RedisTemplate<String, Collection<String>> redisTemplate 初始化.  ");
+        log.info("系统权限缓存 RedisTemplate<String, Collection<String>> redisTemplate 初始化.  ");
         return redisTemplate;
     }
 
+    /**
+     * 用户权限缓存 redis 配置
+     *
+     * @param factory the factory
+     * @return the redis template
+     */
     @Bean
     public RedisTemplate<String, List<? extends GrantedAuthority>> listRedisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, List<? extends GrantedAuthority>> redisTemplate = new RedisTemplate<>();
@@ -113,7 +128,7 @@ public class AbstractHeimdallRedisConfig {
         redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.afterPropertiesSet();
-        log.warn("用户权限缓存 RedisTemplate<String, List<? extends GrantedAuthority>>  redisTemplate 初始化. ");
+        log.info("用户权限缓存 RedisTemplate<String, List<? extends GrantedAuthority>>  redisTemplate 初始化. ");
         return redisTemplate;
     }
 
