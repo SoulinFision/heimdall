@@ -16,6 +16,7 @@
 
 package com.luter.heimdall.core.session.dao.impl;
 
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.cache.SimpleCache;
 import com.luter.heimdall.core.config.Config;
 import com.luter.heimdall.core.config.ConfigManager;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 基于内存缓存(如：map、ehcache 、caffeine)的SessionDao
@@ -46,7 +48,11 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
     /**
      * The Cache.
      */
-    private final SimpleCache<String, SimpleSession> cache;
+    private final SimpleCache<String, SimpleSession> sessionCache;
+    /**
+     * The User auth cache.
+     */
+    private final SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache;
 
     /**
      * The Session id generator.
@@ -65,14 +71,20 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
     /**
      * Instantiates a new Cached session dao.
      *
-     * @param cache         the cache
+     * @param sessionCache  the session cache
+     * @param userAuthCache the user auth cache
      * @param servletHolder the servlet holder
      * @param cookieService the cookie service
      */
-    public CachedSessionDaoImpl(SimpleCache<String, SimpleSession> cache, ServletHolder servletHolder, CookieService cookieService) {
+    public CachedSessionDaoImpl(SimpleCache<String, SimpleSession> sessionCache,
+                                SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache,
+                                ServletHolder servletHolder, CookieService cookieService) {
         final Config config = ConfigManager.getConfig();
-        if (null == cache) {
-            throw new CacheException("cache 实现不能为空");
+        if (null == sessionCache) {
+            throw new CacheException("sessionCache 实现不能为空");
+        }
+        if (null == userAuthCache) {
+            throw new CacheException("userAuthCache 实现不能为空");
         }
         if (null != servletHolder && config.getCookie().getEnabled()) {
             if (null == cookieService) {
@@ -81,43 +93,18 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         } else {
             log.warn("ServletHolder 未实现,Cookie功能关闭");
         }
-        this.cache = cache;
+        this.sessionCache = sessionCache;
+        this.userAuthCache = userAuthCache;
         this.servletHolder = servletHolder;
         this.cookieService = cookieService;
         this.sessionIdGenerator = null == sessionIdGenerator ? new UUIDSessionIdGeneratorImpl() : sessionIdGenerator;
     }
 
-
-    /**
-     * Instantiates a new Cached session dao.
-     *
-     * @param cache              the cache
-     * @param sessionIdGenerator the session id generator
-     * @param servletHolder      the servlet holder
-     * @param cookieService      the cookie service
-     */
-    public CachedSessionDaoImpl(SimpleCache<String, SimpleSession> cache, SessionIdGenerator sessionIdGenerator,
-                                ServletHolder servletHolder, CookieService cookieService) {
-
-        final Config config = ConfigManager.getConfig();
-        if (null == cache) {
-            throw new CacheException("cache 实现不能为空");
-        }
-        if (config.getCookie().getEnabled()) {
-            if (null == servletHolder || null == cookieService) {
-                throw new HeimdallException("请实现或者Set ServletHolder、cookieService实现类,或者关闭Cookie功能");
-            }
-        }
-        this.cache = cache;
-        this.servletHolder = servletHolder;
-        this.cookieService = cookieService;
-        this.sessionIdGenerator = null == sessionIdGenerator ? new UUIDSessionIdGeneratorImpl() : sessionIdGenerator;
-    }
 
     @Override
     public SimpleSession create(UserDetails userDetails) {
         final Config config = ConfigManager.getConfig();
-        if (null == cache) {
+        if (null == sessionCache) {
             throw new CacheException("cache must not be null");
         }
         if (null == sessionIdGenerator) {
@@ -141,7 +128,7 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
             if (null != servletHolder) {
                 session.setHost(WebUtils.getRemoteIp(servletHolder.getRequest()));
             }
-            cache.put(getSessionIdPrefix() + sessionId, session);
+            sessionCache.put(getSessionIdPrefix() + sessionId, session);
             //写入cookie
             if (config.getCookie().getEnabled()) {
                 if (null != cookieService) {
@@ -163,7 +150,7 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
 
     @Override
     public SimpleSession readSession(String sessionId) throws InvalidSessionException {
-        final SimpleSession session = cache.get(getSessionIdPrefix() + sessionId);
+        final SimpleSession session = sessionCache.get(getSessionIdPrefix() + sessionId);
         afterRead(session);
         return session;
     }
@@ -180,7 +167,10 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
     @Override
     public void delete(SimpleSession session) {
         final Config config = ConfigManager.getConfig();
-        cache.remove(getSessionIdPrefix() + session.getId());
+        //清理用户权限缓存
+        clearUserAuthorities(session.getId());
+        //清理 Session 缓存
+        sessionCache.remove(getSessionIdPrefix() + session.getId());
         log.debug("remove session from cache ,key ;{}", getSessionIdPrefix() + session.getId());
         //删除cookie
         if (config.getCookie().getEnabled()) {
@@ -198,7 +188,7 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
 
     @Override
     public Collection<SimpleSession> getActiveSessions() {
-        return cache.values();
+        return sessionCache.values();
     }
 
     @Override
@@ -221,9 +211,12 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         } else {
             for (SimpleSession activeSession : activeSessions) {
                 if (activeSession.isTimedOut()) {
-                    //直接删除了
+                    //过期了，直接删除用户权限缓存
+                    clearUserAuthorities(activeSession.getId());
+                    //直接删除Session 缓存
 //                    delete(activeSession);
-                    //留着等定时任务删除
+                    //Session 缓存留着等定时任务删除，这种情况，可以获取到 Session 过期的错误
+                    //对前端相对友好一些
                     activeSession.setExpired(true);
                     log.warn(" SessionId:[{}] 过期, 被移除 ", activeSession.getId());
                 } else {
@@ -236,6 +229,37 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         log.info("过期Session清理任务结束");
     }
 
+    //////用户权限部分
+
+    @Override
+    public void setUserAuthorities(String sessionId, List<? extends GrantedAuthority> authorities) {
+        if (null != authorities && !authorities.isEmpty()) {
+            log.debug("缓存 用户权限，SessionId : [{}], 权限总数:{}", sessionId, authorities.size());
+            userAuthCache.put(sessionId, authorities);
+        } else {
+            log.warn("缓存用户权限失败，用户权限为空");
+        }
+    }
+
+    @Override
+    public List<? extends GrantedAuthority> getUserAuthorities(String sessionId) {
+        log.debug(" 获取缓存 用户权限,SessionId :[{}]", sessionId);
+        return userAuthCache.get(sessionId);
+    }
+
+    @Override
+    public void clearUserAuthorities(String sessionId) {
+        log.debug("清除缓存 用户权限，SessionId : [{}]", sessionId);
+        userAuthCache.remove(sessionId);
+    }
+
+    @Override
+    public void clearAllUserAuthorities() {
+        log.debug("清除所有缓存的用户权限");
+        userAuthCache.clear();
+    }
+
+    //////用户权限部分
     @Override
     public ServletHolder getServletHolder() {
         return servletHolder;
@@ -252,8 +276,8 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
      *
      * @return the cache
      */
-    public SimpleCache<String, SimpleSession> getCache() {
-        return cache;
+    public SimpleCache<String, SimpleSession> getSessionCache() {
+        return sessionCache;
     }
 
     /**
@@ -304,4 +328,7 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         return StrUtils.isBlank(sessionIdPrefix) ? DEFAULT_SESSION_ID_PREFIX : sessionIdPrefix;
     }
 
+    public SimpleCache<String, List<? extends GrantedAuthority>> getUserAuthCache() {
+        return userAuthCache;
+    }
 }

@@ -17,15 +17,14 @@
 package com.luter.heimdall.sample.simple.service;
 
 import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
-import com.luter.heimdall.core.authorization.authority.SimpleGrantedAuthority;
 import com.luter.heimdall.core.authorization.service.AuthorizationMetaDataService;
-import com.luter.heimdall.sample.common.dto.SysResourceDTO;
 import com.luter.heimdall.sample.common.util.DataUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 系统权限数据提供服务
@@ -37,20 +36,12 @@ import java.util.stream.Collectors;
 public class AuthorizationMetaDataServiceImpl implements AuthorizationMetaDataService {
     @Override
     public Map<String, Collection<String>> loadSysAuthorities() {
-        final List<SysResourceDTO> resources = DataUtil.getExactUrlResourceList();
-        //需要保证顺序
-        Map<String, Collection<String>> perms = new LinkedHashMap<>(resources.size());
-        for (SysResourceDTO sysResourceDTO : resources) {
-            //url +perm 构造拦截器链Map
-            perms.put(sysResourceDTO.getUrl(), Collections.singletonList(sysResourceDTO.getPerm()));
-        }
-        return perms;
+        return DataUtil.getRolePerms();
 
     }
 
     @Override
     public List<? extends GrantedAuthority> loadUserAuthorities(String principal) {
-        final List<SysResourceDTO> resources = DataUtil.getExactUrlResourceList();
-        return resources.stream().map(d -> new SimpleGrantedAuthority(d.getPerm())).collect(Collectors.toList());
+        return DataUtil.getUserRolePerms(principal);
     }
 }

@@ -138,26 +138,42 @@ public interface SessionDAO {
 
     /**
      * 用户登录成功后，缓存用户具有的权限
+     *
+     * @param sessionId   the session id
+     * @param authorities the authorities
      */
-    default void setUserAuthorities(String sessionId,List<? extends GrantedAuthority> authorities) {
-        System.out.println("======setAuthorities default");
-    }
+    void setUserAuthorities(String sessionId, List<? extends GrantedAuthority> authorities);
 
     /**
      * 从缓存中读取当前登录用户的权限
+     *
+     * @param sessionId the session id
+     * @return the user authorities
      */
-    default List<? extends GrantedAuthority> getUserAuthorities(String sessionId) {
-        System.out.println("======setAuthorities default");
-        return null;
+    List<? extends GrantedAuthority> getUserAuthorities(String sessionId);
+
+    /**
+     * 当 redis 发生 Key 过期或者删除事件的时候，
+     * 清理 Redis 的 zset 和 hash 实现数据
+     * 内存缓存不支持此操作
+     *
+     * @param sessionId the session id
+     */
+    default void clearOnlineUserCache(String sessionId) {
+
     }
 
-    default void clearUserAuthorities(String sessionId) {
-        System.out.println("======clearUserAuthorities default");
-    }
+    /**
+     * 清除当前用户的缓存权限
+     *
+     * @param sessionId the session id
+     */
+    void clearUserAuthorities(String sessionId);
 
-    default void clearAllUserAuthorities() {
-        System.out.println("======clearAllUserAuthorities default");
-    }
+    /**
+     * 清除所有用户的缓存权限
+     */
+    void clearAllUserAuthorities();
 
     /**
      * Gets servlet holder.

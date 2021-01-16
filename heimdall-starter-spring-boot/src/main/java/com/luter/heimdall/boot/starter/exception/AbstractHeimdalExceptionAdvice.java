@@ -112,7 +112,6 @@ public abstract class AbstractHeimdalExceptionAdvice {
     @ExceptionHandler(value = {Exception.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Object exception(HttpServletRequest request, Exception e) {
-        e.printStackTrace();
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         int code = -1;
         Throwable resultCause = getRootExceptionThrowable(e);

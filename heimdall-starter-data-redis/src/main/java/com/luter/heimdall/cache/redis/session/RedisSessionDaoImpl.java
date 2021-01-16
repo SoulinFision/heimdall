@@ -57,6 +57,9 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      * The Session cache.
      */
     private final RedisTemplate<String, SimpleSession> sessionCache;
+    /**
+     * The User auth cache.
+     */
     private final RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache;
 
     /**
@@ -82,6 +85,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      *
      * @param sessionCache    the session cache
      * @param activeUserCache the active user cache
+     * @param userAuthCache   the user auth cache
      * @param servletHolder   the servlet holder
      * @param cookieProvider  the cookie provider
      */
@@ -117,6 +121,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      * @param sessionCache       the session cache
      * @param sessionIdGenerator the session id generator
      * @param activeUserCache    the active user cache
+     * @param userAuthCache      the user auth cache
      * @param servletHolder      the servlet holder
      * @param cookieProvider     the cookie provider
      */
@@ -280,6 +285,9 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     @Override
     public void delete(SimpleSession session) {
         final Config config = ConfigManager.getConfig();
+        //清理用户权限缓存
+        clearUserAuthorities(session.getId());
+        //删除用户 Session 缓存
         sessionCache.delete(getSessionIdPrefix() + session.getId());
         if (null != activeUserCache) {
             activeUserCache.opsForZSet().remove(getActiveSessionCacheKey(), session.getId());
@@ -396,6 +404,8 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             log.info("没合法的SessionId,Hash 和 Zset全部清空");
             activeUserCache.delete(config.getSession().getActiveUserCacheKey());
             activeUserCache.delete(config.getSession().getActiveSessionCacheKey());
+            //缓存的所有用户权限也全部清除
+            clearAllUserAuthorities();
         } else {
             log.info("当前合法Session总数:{},现在开始进行Hash和ZSet清理", validSessions.size());
             //活动用户Hash
@@ -478,6 +488,11 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         return activeUserCache;
     }
 
+    /**
+     * Sets servlet holder.
+     *
+     * @param servletHolder the servlet holder
+     */
     public void setServletHolder(ServletHolder servletHolder) {
         this.servletHolder = servletHolder;
     }
@@ -566,6 +581,39 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     }
 
 
+    /**
+     * 清理 zset 缓存和 hash 缓存
+     * <p>
+     * 主要提供给 redis 事件使用
+     */
+    @Override
+    public void clearOnlineUserCache(String sessionId) {
+        final Config config = ConfigManager.getConfig();
+        //清理用户的权限缓存
+        log.warn("清理用户权限缓存,SessionId:[{}]", sessionId);
+        userAuthCache.opsForHash().delete(config.getAuthority().getUserCachedKey(), sessionId);
+        log.info("Session 删除事件 ,key:[{}],从zSet删除", sessionId);
+        //删除ZSet中对应Key (SessionId)
+        final Long session = activeUserCache.opsForZSet().remove(config.getSession().getActiveSessionCacheKey(), sessionId);
+        log.info("Session 删除事件 ,key:[{}],从 Session zSet 删除，结果:{}", sessionId, session);
+        //拿到 Hash 中所有数据
+        final Map<Object, Object> entries = activeUserCache.opsForHash().entries(config.getSession().getActiveUserCacheKey());
+        List<String> toBeDeleted = new ArrayList<>();
+        if (!entries.isEmpty()) {
+            //遍历，如果value(sessionId)  与传入的SessionId相同,把key加入待删除List
+            for (Map.Entry<Object, Object> data : entries.entrySet()) {
+                if (data.getValue().equals(sessionId)) {
+                    toBeDeleted.add(data.getKey().toString());
+                }
+            }
+        }
+        // Hash 中有数据要删除
+        if (!toBeDeleted.isEmpty()) {
+            final Long user = activeUserCache.opsForHash().delete(config.getSession().getActiveUserCacheKey(), toBeDeleted.toArray());
+            log.info("Session 删除事件 ,key:[{}],从 User Hash 删除，结果:{}", sessionId, user);
+        }
+    }
+
     /////用户权限缓存
 
 
@@ -594,6 +642,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     public void clearUserAuthorities(String sessionId) {
         if (StrUtils.isNotBlank(sessionId)) {
             final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
+            log.warn("清理系统用户缓存，SessionId:[{}]", sessionId);
             userAuthCache.opsForHash().delete(authority.getUserCachedKey(), sessionId);
         } else {
             log.warn("清理用户权限缓存失败，SessionID 为空");

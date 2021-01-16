@@ -19,16 +19,12 @@ package com.luter.heimdall.cache.redis.listener;
 
 import com.luter.heimdall.core.config.Config;
 import com.luter.heimdall.core.config.ConfigManager;
+import com.luter.heimdall.core.session.dao.SessionDAO;
 import com.luter.heimdall.core.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 监听token过期事件__keyevent@数据库__:expired"
@@ -43,7 +39,8 @@ public class RedisSessionKeyDeletedListener extends RedisKeyDeletedEventMessageL
      * The User cache redis.
      */
     @Autowired
-    private StringRedisTemplate userCacheRedis;
+    private SessionDAO sessionDAO;
+
 
     /**
      * Instantiates a new Session redis key deleted listener.
@@ -65,26 +62,7 @@ public class RedisSessionKeyDeletedListener extends RedisKeyDeletedEventMessageL
         String expiredKey = message.toString();
         if (StrUtils.isNotBlank(expiredKey) && expiredKey.startsWith(config.getSession().getSessionIdPrefix())) {
             String sessionId = expiredKey.replace(config.getSession().getSessionIdPrefix(), "");
-            log.info("Session 删除事件 ,key:[{}],从zSet删除", sessionId);
-            //删除ZSet中对应Key (SessionId)
-            final Long session = userCacheRedis.opsForZSet().remove(config.getSession().getActiveSessionCacheKey(), sessionId);
-            log.info("Session 删除事件 ,key:[{}],从 Session zSet 删除，结果:{}", sessionId, session);
-            //拿到 Hash 中所有数据
-            final Map<Object, Object> entries = userCacheRedis.opsForHash().entries(config.getSession().getActiveUserCacheKey());
-            List<String> toBeDeleted = new ArrayList<>();
-            if (!entries.isEmpty()) {
-                //遍历，如果value(sessionId)  与传入的SessionId相同,把key加入待删除List
-                for (Map.Entry<Object, Object> data : entries.entrySet()) {
-                    if (data.getValue().equals(sessionId)) {
-                        toBeDeleted.add(data.getKey().toString());
-                    }
-                }
-            }
-            // Hash 中有数据要删除
-            if (!toBeDeleted.isEmpty()) {
-                final Long user = userCacheRedis.opsForHash().delete(config.getSession().getActiveUserCacheKey(), toBeDeleted.toArray());
-                log.info("Session 删除事件 ,key:[{}],从 User Hash 删除，结果:{}", sessionId, user);
-            }
+            sessionDAO.clearOnlineUserCache(sessionId);
 
         } else {
             log.info("Session 删除事件,key:[{}]", expiredKey);

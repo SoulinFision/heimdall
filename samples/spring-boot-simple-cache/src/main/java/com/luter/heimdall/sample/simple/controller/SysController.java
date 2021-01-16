@@ -22,6 +22,7 @@ import com.luter.heimdall.boot.starter.util.ResponseUtils;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.manager.AuthenticationManager;
 import com.luter.heimdall.core.session.SimpleSession;
+import com.luter.heimdall.core.session.dao.SessionDAO;
 import com.luter.heimdall.sample.common.dto.SysUserDTO;
 import com.luter.heimdall.sample.simple.details.PcUserDetails;
 import com.luter.heimdall.sample.simple.service.SysUserService;
@@ -129,6 +130,9 @@ public class SysController {
      */
     @RequestMapping("/online")
     public ResponseEntity<ResponseVO<Collection<SimpleSession>>> online() {
+        final SessionDAO sessionDAO = authenticationManager.getSessionDAO();
+        //清除所有用户权限缓存
+        sessionDAO.clearAllUserAuthorities();
         final Collection<SimpleSession> activeSessions = authenticationManager.getActiveSessions();
         return ResponseUtils.ok(activeSessions);
     }

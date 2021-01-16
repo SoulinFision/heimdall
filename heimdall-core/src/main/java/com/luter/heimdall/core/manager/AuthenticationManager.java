@@ -20,7 +20,7 @@ import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.exception.AccountException;
 import com.luter.heimdall.core.exception.ExpiredSessionException;
-import com.luter.heimdall.core.exception.SessionException;
+import com.luter.heimdall.core.exception.InvalidSessionException;
 import com.luter.heimdall.core.exception.UnAuthticatedException;
 import com.luter.heimdall.core.manager.listener.AbstractAuthenticationEvent;
 import com.luter.heimdall.core.session.Page;
@@ -266,7 +266,7 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
                 onSessionKickOut(simpleSession);
                 return true;
             } else {
-                throw new SessionException("用户未登录");
+                throw new InvalidSessionException("ID 错误，用户未登录，踢出失败");
             }
 
         } else {

@@ -44,6 +44,4 @@ public interface UserDetails extends Serializable {
      * @return the boolean
      */
     boolean enabled();
-
-
 }

@@ -53,24 +53,31 @@ import java.util.List;
 public class RedisSecurityConfig {
 
     /**
-     * The Session redis template.
+     * Session 缓存
      */
     @Autowired
     private RedisTemplate<String, SimpleSession> sessionRedisTemplate;
 
     /**
-     * The String redis template.
+     * 在线用户关系缓存
      */
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    /**
+     * 系统权限缓存
+     */
     @Autowired
     private RedisTemplate<String, Collection<String>> stringCollectionRedisTemplate;
+    /**
+     * Session(用户) 权限缓存
+     */
     @Autowired
     private RedisTemplate<String, List<? extends GrantedAuthority>> userAuthRedisTemplate;
 
     /**
      * Cookie service cookie service.
      *
+     * @param servletHolder the servlet holder
      * @return the cookie service
      */
     @Bean
@@ -83,43 +90,13 @@ public class RedisSecurityConfig {
      * Session dao session dao.
      *
      * @param cookieService the cookie service
+     * @param servletHolder the servlet holder
      * @return the session dao
      */
     @Bean
     public SessionDAO sessionDAO(CookieService cookieService, ServletHolder servletHolder) {
         log.warn("初始化 SessionDAO");
-        final RedisSessionDaoImpl redisSessionDao =
-                new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, userAuthRedisTemplate, servletHolder, cookieService);
-        //Session事件监听
-//        List<SessionEventListener> listeners = new ArrayList<>();
-//        listeners.add(new SessionEventListener() {
-//            @Override
-//            public void afterCreated(SimpleSession session) {
-//                log.warn("Session 事件 : Session 成功创建:{}", session.getId());
-//            }
-//
-//            @Override
-//            public void afterRead(SimpleSession session) {
-//                log.warn("Session 事件 : afterRead :{}", session.getId());
-//            }
-//
-//            @Override
-//            public void afterUpdated(SimpleSession session) {
-//                log.warn("Session 事件 : afterUpdated :{}", session.getId());
-//            }
-//
-//            @Override
-//            public void afterDeleted(SimpleSession session) {
-//                log.warn("Session 事件 : afterDeleted :{}", session.getId());
-//            }
-//
-//            @Override
-//            public void afterSessionValidScheduled() {
-//                log.warn("Session 事件 : afterSessionValidScheduled");
-//            }
-//        });
-//        redisSessionDao.setListeners(listeners);
-        return redisSessionDao;
+        return new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, userAuthRedisTemplate, servletHolder, cookieService);
     }
 
     /**
@@ -131,23 +108,7 @@ public class RedisSecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(SessionDAO sessionDAO) {
         log.warn("初始化 认证管理器");
-        final AuthenticationManager authenticationManager = new AuthenticationManager(sessionDAO);
-//        List<AuthenticationEventListener> listeners = new ArrayList<>();
-//        listeners.add(new AuthenticationEventListener() {
-//            @Override
-//            public void onLogin(int code, SimpleSession session) {
-//                log.warn("认证 事件: 用户:[{}] {}"
-//                        , session.getDetails().getPrincipal()
-//                        , 1 == code ? "重复登录" : 2 == code ? "登录" : "");
-//            }
-//
-//            @Override
-//            public void onLogout(SimpleSession session) {
-//                log.warn("认证 事件: 用户:[{}] 注销啦", session.getDetails().getPrincipal());
-//            }
-//        });
-//        authenticationManager.setListeners(listeners);
-        return authenticationManager;
+        return new AuthenticationManager(sessionDAO);
     }
 
     /**
@@ -165,7 +126,9 @@ public class RedisSecurityConfig {
     /**
      * Authorization manager authorization manager.
      *
-     * @param authenticationManager the authentication manager
+     * @param authenticationManager         the authentication manager
+     * @param authorizationMetaDataService  the authorization meta data service
+     * @param authorizationMetaDataCacheDao the authorization meta data cache dao
      * @return the authorization manager
      */
     @Bean
@@ -180,6 +143,7 @@ public class RedisSecurityConfig {
      * Authorization filter handler authorization filter handler.
      *
      * @param authenticationManager the authentication manager
+     * @param authorizationManager  the authorization manager
      * @return the authorization filter handler
      */
     @Bean

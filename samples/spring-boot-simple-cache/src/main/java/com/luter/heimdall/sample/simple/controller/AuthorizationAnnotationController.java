@@ -73,9 +73,9 @@ public class AuthorizationAnnotationController {
      * @return the string
      */
     @GetMapping("/roles/any")
-    @RequiresRoles(value = {"admin", "guest"}, mode = Mod.ANY)
+    @RequiresRoles(value = {"admin", "user"}, mode = Mod.ANY)
     public String requireRolesAny() {
-        return "RequiresRoles(admin,guest) Any";
+        return "RequiresRoles(admin,user) Any";
     }
 
     /**

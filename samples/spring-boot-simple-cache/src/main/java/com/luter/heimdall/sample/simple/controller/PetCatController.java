@@ -19,7 +19,10 @@ package com.luter.heimdall.sample.simple.controller;
 import com.luter.heimdall.core.authorization.handler.AuthorizationFilterHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The type Pet cat controller.
@@ -38,7 +41,7 @@ public class PetCatController {
      *
      * @return the string
      */
-    @PostMapping("/save")
+    @GetMapping("/save")
     public String save() {
         return "save";
     }
@@ -49,7 +52,7 @@ public class PetCatController {
      * @param id the id
      * @return the string
      */
-    @GetMapping("/delete/{id}")
+    @RequestMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         return "delete:" + id;
     }

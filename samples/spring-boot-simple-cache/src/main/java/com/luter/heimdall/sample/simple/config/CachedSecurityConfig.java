@@ -21,6 +21,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.Maps;
 import com.luter.heimdall.cache.caffeinel.CaffeineCache;
 import com.luter.heimdall.core.authorization.aspect.AuthorizationAnnotationAspect;
+import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.authorization.dao.AuthorizationMetaDataCacheDao;
 import com.luter.heimdall.core.authorization.dao.impl.CachedAuthorizationMetaDataDao;
 import com.luter.heimdall.core.authorization.handler.AuthorizationFilterHandler;
@@ -32,12 +33,10 @@ import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.cookie.SessionCookieServiceImpl;
 import com.luter.heimdall.core.manager.AuthenticationManager;
 import com.luter.heimdall.core.manager.AuthorizationManager;
-import com.luter.heimdall.core.manager.listener.AuthenticationEventListener;
 import com.luter.heimdall.core.servlet.ServletHolder;
 import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.core.session.dao.SessionDAO;
 import com.luter.heimdall.core.session.dao.impl.CachedSessionDaoImpl;
-import com.luter.heimdall.core.session.listener.SessionEventListener;
 import com.luter.heimdall.core.session.scheduler.DefaultInvalidSessionClearScheduler;
 import com.luter.heimdall.sample.common.encoder.BCryptPasswordEncoder;
 import com.luter.heimdall.sample.common.encoder.PasswordEncoder;
@@ -46,7 +45,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -86,38 +84,11 @@ public class CachedSecurityConfig {
     @Bean
     public SessionDAO sessionDAO(CookieService cookieService, ServletHolder servletHolder) {
         log.warn("初始化 SessionDAO");
-        SimpleCache<String, SimpleSession> mapSimpleCache = new MapCache<>(Maps.newConcurrentMap());
-        final CachedSessionDaoImpl cachedSessionDao = new CachedSessionDaoImpl(mapSimpleCache, servletHolder, cookieService);
-        //Session事件监听
-        List<SessionEventListener> listeners = new ArrayList<>();
-        listeners.add(new SessionEventListener() {
-            @Override
-            public void afterCreated(SimpleSession session) {
-                log.warn("Session 事件 : Session 成功创建:{}", session.getId());
-            }
-
-            @Override
-            public void afterRead(SimpleSession session) {
-                log.warn("Session 事件 : afterRead :{}", session.getId());
-            }
-
-            @Override
-            public void afterUpdated(SimpleSession session) {
-                log.warn("Session 事件 : afterUpdated :{}", session.getId());
-            }
-
-            @Override
-            public void afterDeleted(SimpleSession session) {
-                log.warn("Session 事件 : afterDeleted :{}", session.getId());
-            }
-
-            @Override
-            public void afterSessionValidScheduled() {
-                log.warn("Session 事件 : afterSessionValidScheduled");
-            }
-        });
-        cachedSessionDao.setListeners(listeners);
-        return cachedSessionDao;
+        //        Session缓存
+        SimpleCache<String, SimpleSession> sessionMapCache = new MapCache<>(Maps.newConcurrentMap());
+        //Session(用户) 权限缓存
+        SimpleCache<String, List<? extends GrantedAuthority>> userAuthMapCache = new MapCache<>(Maps.newConcurrentMap());
+        return new CachedSessionDaoImpl(sessionMapCache, userAuthMapCache, servletHolder, cookieService);
     }
 
     /**
@@ -129,25 +100,7 @@ public class CachedSecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(SessionDAO sessionDAO) {
         log.warn("初始化 认证管理器");
-        final AuthenticationManager authenticationManager = new AuthenticationManager(sessionDAO);
-        List<AuthenticationEventListener> listeners = new ArrayList<>();
-        listeners.add(new AuthenticationEventListener() {
-            @Override
-            public void onLogin(int code, SimpleSession session) {
-                log.warn("认证 事件: 用户:[{}] {}"
-                        , session.getDetails().getPrincipal()
-                        , 1 == code ? "重复登录" : 2 == code ? "登录" : "");
-
-            }
-
-            @Override
-            public void onLogout(SimpleSession session) {
-                log.warn("认证 事件:用户:[{}] 注销啦", session.getDetails().getPrincipal());
-            }
-
-        });
-        authenticationManager.setListeners(listeners);
-        return authenticationManager;
+        return new AuthenticationManager(sessionDAO);
     }
 
 

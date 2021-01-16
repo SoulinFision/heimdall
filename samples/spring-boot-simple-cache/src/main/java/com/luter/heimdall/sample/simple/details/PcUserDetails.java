@@ -66,7 +66,6 @@ public class PcUserDetails implements UserDetails {
         return user.getEnabled();
     }
 
-
     /**
      * Gets user.
      *

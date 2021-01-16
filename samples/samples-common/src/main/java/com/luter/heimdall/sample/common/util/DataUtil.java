@@ -116,6 +116,10 @@ public final class DataUtil {
                 return adminPerms;
             case "APP:2":
                 return luterPerms;
+            case "PC:1":
+                return adminPerms;
+            case "PC:2":
+                return luterPerms;
             default:
                 return new ArrayList<>();
         }
@@ -171,6 +175,10 @@ public final class DataUtil {
             case "APP:1":
                 return adminPerms;
             case "APP:2":
+                return luterPerms;
+            case "PC:1":
+                return adminPerms;
+            case "PC:2":
                 return luterPerms;
             default:
                 return new ArrayList<>();
@@ -236,6 +244,10 @@ public final class DataUtil {
             case "APP:1":
                 return adminPerms;
             case "APP:2":
+                return luterPerms;
+            case "PC:1":
+                return adminPerms;
+            case "PC:2":
                 return luterPerms;
             default:
                 return new ArrayList<>();
