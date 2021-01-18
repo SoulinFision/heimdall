@@ -64,7 +64,15 @@ public class SessionProperty {
      * 默认   hSession:xxxxx
      */
     private String sessionName = "HSessionId";
-
+    /**
+     * 重复登录处理策略
+     * <p>
+     * <p>
+     * false: 不允许，踢掉前面的
+     * <p>
+     * true: 允许，拒绝后来的
+     */
+    private boolean concurrentLogin = false;
     /////////以下参数目前仅对redis生效@v1.0.0
     /**
      * 要不要续签Session

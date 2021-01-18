@@ -39,7 +39,6 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.session.SimpleSession;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -76,7 +75,6 @@ public class HeimdallRedisConfig {
     public RedisTemplate<String, SimpleSession> redisStringSimpleSessionTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, SimpleSession> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(factory);
-        redisTemplate.setEnableTransactionSupport(true);
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
         redisTemplate.setKeySerializer(stringRedisSerializer);
         redisTemplate.setHashKeySerializer(stringRedisSerializer);
@@ -98,7 +96,6 @@ public class HeimdallRedisConfig {
     public RedisTemplate<String, Collection<String>> stringCollectionRedisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Collection<String>> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(factory);
-        redisTemplate.setEnableTransactionSupport(true);
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
         redisTemplate.setKeySerializer(stringRedisSerializer);
         redisTemplate.setHashKeySerializer(stringRedisSerializer);
@@ -120,7 +117,6 @@ public class HeimdallRedisConfig {
     public RedisTemplate<String, List<? extends GrantedAuthority>> listRedisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, List<? extends GrantedAuthority>> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(factory);
-        redisTemplate.setEnableTransactionSupport(true);
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
         redisTemplate.setKeySerializer(stringRedisSerializer);
         redisTemplate.setHashKeySerializer(stringRedisSerializer);

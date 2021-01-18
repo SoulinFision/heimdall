@@ -139,14 +139,15 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             throw new NonEnabledAccountException();
         }
         session.setDetails(userDetails);
+        //在认证服务判断，此处注释
         //根据 principal 判断用户是否登录
-        final SimpleSession sessionIdByUid = getByPrincipal(userDetails.getPrincipal());
-        if (null != sessionIdByUid) {
-            log.debug("这家伙已经登录过了:{}", session.getDetails().getPrincipal());
-            //更新一下 Session
-            update(sessionIdByUid);
-            return sessionIdByUid;
-        }
+//        final SimpleSession sessionIdByUid = getByPrincipal(userDetails.getPrincipal());
+//        if (null != sessionIdByUid) {
+//            log.debug("这家伙已经登录过了:{}", session.getDetails().getPrincipal());
+//            //更新一下 Session
+//            update(sessionIdByUid);
+//            return sessionIdByUid;
+//        }
         //拿远端IP
         if (null != servletHolder) {
             session.setHost(WebUtils.getRemoteIp(servletHolder.getRequest()));
@@ -222,13 +223,13 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
                 // 当前剩余时间占比
                 final double v = expire.doubleValue() / globalSessionTimeout;
                 if (v < radio) {
-                    log.info("续签 Session [key:{}],当前剩余时间:[{}]秒,全局过期时间:[{}]秒，占比:[{}],低于设置值:[{}],续签至全局时长:[{}] 秒",
+                    log.debug("续签 Session [key:{}],当前剩余时间:[{}]秒,全局过期时间:[{}]秒，占比:[{}],低于设置值:[{}],续签至全局时长:[{}] 秒",
                             sessionKey, expire.doubleValue(), globalSessionTimeout,
                             v, radio, globalSessionTimeout);
                     //把过期时间重置为全局过期时间，也就是续签
                     expire = globalSessionTimeout;
                 } else {
-                    log.info("续签 Session [key:{}],当前剩余时间:[{}]秒,全局过期时间:[{}]秒，占比:[{}],高于设置值:[{}],不做处理",
+                    log.debug("续签 Session [key:{}],当前剩余时间:[{}]秒,全局过期时间:[{}]秒，占比:[{}],高于设置值:[{}],不做处理",
                             sessionKey, expire.doubleValue(), globalSessionTimeout,
                             v, radio);
                 }
@@ -267,6 +268,8 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
                 throw new CookieException("Cookie Provider must not be null");
             }
         }
+        //删除用户权限缓存
+        clearUserAuthorities(session.getId());
         //发布事件
         afterDeleted(session);
     }
@@ -362,22 +365,22 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     @Override
     public void validateExpiredSessions() {
         final Config config = ConfigManager.getConfig();
-        log.info("清理无效在线用户ID=  开始");
+        log.debug("清理无效在线用户ID=  开始");
         //合法SimpleSessions,这里没有，但是上面2个里面有的，就是需要清理的,这里的数据带Session前缀
         final Set<String> validSessions = sessionCache.keys(getSessionIdPrefix() + "*");
         //如果当前就没有登录用户，Hash 和 Zset全部清空
         if (null == validSessions || validSessions.isEmpty()) {
-            log.info("没合法的SessionId, Hash 、Zset、用户权限缓存 全部清空");
+            log.debug("没合法的SessionId, Hash 、Zset、用户权限缓存 全部清空");
             activeUserCache.delete(config.getSession().getActiveUserCacheKey());
             activeUserCache.delete(config.getSession().getActiveSessionCacheKey());
             //缓存的所有用户权限也全部清除
             clearAllUserAuthorities();
         } else {
-            log.info("当前合法Session总数:{},现在开始进行Hash和ZSet清理", validSessions.size());
+            log.debug("当前合法Session总数:{},现在开始进行Hash和ZSet清理", validSessions.size());
             //活动用户Hash
             final Map<Object, Object> activeUsers = activeUserCache.opsForHash().entries(config.getSession().getActiveUserCacheKey());
             if (!activeUsers.isEmpty()) {
-                log.info("当前活动用户Hash总数:{}", activeUsers.size());
+                log.debug("当前活动用户Hash总数:{}", activeUsers.size());
                 List<String> activeUsersToBeDeleted = new ArrayList<>();
                 for (Map.Entry<Object, Object> data : activeUsers.entrySet()) {
                     final Object value = data.getValue();
@@ -390,26 +393,26 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
                         }
                     }
                 }
-                log.info("当前 待清理 活动用户Hash总数:{}", activeUsersToBeDeleted.size());
+                log.debug("当前 待清理 活动用户Hash总数:{}", activeUsersToBeDeleted.size());
                 if (!activeUsersToBeDeleted.isEmpty()) {
-                    log.info("被清理的 活动用户Hash，总数:{}", activeUsersToBeDeleted.size());
+                    log.debug("被清理的 活动用户Hash，总数:{}", activeUsersToBeDeleted.size());
                     activeUserCache.opsForHash().delete(config.getSession().getActiveUserCacheKey(), activeUsersToBeDeleted.toArray());
                 }
             }
             //活动Session ZSet
             final Set<String> activeSessions = activeUserCache.opsForZSet().range(config.getSession().getActiveSessionCacheKey(), 0, -1);
             if (null != activeSessions && !activeSessions.isEmpty()) {
-                log.info("当前 活动Session ZSet 总数:{}", activeSessions.size());
+                log.debug("当前 活动Session ZSet 总数:{}", activeSessions.size());
                 final List<String> activeSessionsToBeDeleted =
                         activeSessions.stream().filter(d -> !validSessions.contains(getSessionIdPrefix() + d))
                                 .collect(Collectors.toList());
                 if (!activeSessionsToBeDeleted.isEmpty()) {
-                    log.info("被清理的 活动Session ZSet，总数:{}", activeSessionsToBeDeleted.size());
+                    log.debug("被清理的 活动Session ZSet，总数:{}", activeSessionsToBeDeleted.size());
                     activeUserCache.opsForZSet().remove(config.getSession().getActiveSessionCacheKey(), activeSessionsToBeDeleted.toArray());
                 }
 
             } else {
-                log.info("当前 活动Session ZSet 为空，不做处理");
+                log.debug("当前 活动Session ZSet 为空，不做处理");
             }
 
         }

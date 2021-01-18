@@ -120,12 +120,13 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
             }
             session.setId(sessionId);
             session.setDetails(userDetails);
-            final SimpleSession userByUniqueId = getByPrincipal(session.getDetails().getPrincipal());
-            if (null != userByUniqueId) {
-                log.debug("已经登录过了:{}", session.getDetails().getPrincipal());
-                update(userByUniqueId);
-                return userByUniqueId;
-            }
+            //在认证服务判断，此处注释
+//            final SimpleSession userByUniqueId = getByPrincipal(session.getDetails().getPrincipal());
+//            if (null != userByUniqueId) {
+//                log.debug("已经登录过了:{}", session.getDetails().getPrincipal());
+//                update(userByUniqueId);
+//                return userByUniqueId;
+//            }
             //拿远端IP
             if (null != servletHolder) {
                 session.setHost(WebUtils.getRemoteIp(servletHolder.getRequest()));
@@ -184,6 +185,9 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         } else {
             log.debug("Cookie功能未开启");
         }
+
+        //删除用户权限缓存
+        clearUserAuthorities(session.getId());
         //发布事件
         afterDeleted(session);
     }

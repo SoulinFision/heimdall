@@ -40,7 +40,14 @@ public abstract class AbstractAuthenticationEvent {
     /**
      * 认证登录成功
      *
-     * @param code    状态码 1： 重复登录，2：登录成功
+     * @param code    状态码
+     *                <p>
+     *                <p>
+     *                0 : 重复登录，新来的被拒绝登录
+     *                <p>
+     *                1： 重复登录，上一个登录 Session 被踢出
+     *                <p>
+     *                2：登录成功，创建了新 Session
      * @param session the session
      */
     public void onLogin(int code, SimpleSession session) {

@@ -51,6 +51,16 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
     private final SessionDAO sessionDAO;
 
     /**
+     * 是否允许重复登录
+     * <p>
+     * <p>
+     * false: 不允许，踢掉前面的
+     * <p>
+     * true: 允许，拒绝后来的
+     */
+    private boolean concurrentLogin;
+
+    /**
      * 认证管理器
      * <p>
      * 实现用户登录、注销、在线用户查看、踢出等认证相关操作
@@ -59,6 +69,7 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
      */
     public AuthenticationManager(SessionDAO sessionDAO) {
         this.sessionDAO = sessionDAO;
+        concurrentLogin = ConfigManager.getConfig().getSession().isConcurrentLogin();
     }
 
     /**
@@ -79,19 +90,29 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
         final SimpleSession session = sessionDAO.getByPrincipal(userDetails.getPrincipal());
         //登录了
         if (null != session) {
-            //没过期，直接把SessionId返回
-            if (!session.isTimedOut()) {
-                log.info(" Principal :[{}] 已经登录,SessionId:[{}],续签返回.", userDetails.getPrincipal(), session.getId());
-                //此处默认进行Session更新，也可以踢出上一个登录，然后重新登录
-                final SimpleSession updateSession = sessionDAO.update(session);
-                //发布事件
-                onLogin(1, updateSession);
-                return updateSession;
+            //把新来的拒了
+            if (concurrentLogin) {
+                onLogin(0, session);
+                throw new AccountException("您已经在别处登录,登录拒绝.请等待上次登录状态失效后再试");
             } else {
-                //过期了，删除过期Session，继续登录流程
-                log.info(" Principal :[{}] with SessionId:[{}],TimedOut. delete!", userDetails.getPrincipal(), session.getId());
+                log.warn("Principal:{},在别处登录，Session:{} 被自动踢出.", session.getDetails().getPrincipal(), session.getId());
+                //把前面的踢了
+                onLogin(1, session);
                 sessionDAO.delete(session);
             }
+            //没过期，直接把SessionId返回
+//            if (!session.isTimedOut()) {
+//                log.info(" Principal :[{}] 已经登录,SessionId:[{}],续签返回.", userDetails.getPrincipal(), session.getId());
+//                //此处默认进行Session更新，也可以踢出上一个登录，然后重新登录
+//                final SimpleSession updateSession = sessionDAO.update(session);
+//                //发布事件
+//                onLogin(1, updateSession);
+//                return updateSession;
+//            } else {
+//                //过期了，删除过期Session，继续登录流程
+//                log.info(" Principal :[{}] with SessionId:[{}],TimedOut. delete!", userDetails.getPrincipal(), session.getId());
+//                sessionDAO.delete(session);
+//            }
         }
         log.debug("开始进行登录，userDetails:{}", userDetails);
         final SimpleSession simpleSession = sessionDAO.create(userDetails);
@@ -300,5 +321,13 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
      */
     public SessionDAO getSessionDAO() {
         return sessionDAO;
+    }
+
+    public boolean isConcurrentLogin() {
+        return concurrentLogin;
+    }
+
+    public void setConcurrentLogin(boolean concurrentLogin) {
+        this.concurrentLogin = concurrentLogin;
     }
 }
