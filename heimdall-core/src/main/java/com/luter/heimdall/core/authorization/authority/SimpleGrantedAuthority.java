@@ -31,6 +31,8 @@ import lombok.experimental.Accessors;
 public class SimpleGrantedAuthority implements GrantedAuthority {
     /**
      * 权限标志，或者角色标志。
+     *
+     * @since 1.0.2
      */
     private String attr;
 

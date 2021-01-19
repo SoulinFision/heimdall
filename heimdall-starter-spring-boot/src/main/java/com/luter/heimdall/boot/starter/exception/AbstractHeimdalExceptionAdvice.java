@@ -68,7 +68,7 @@ public abstract class AbstractHeimdalExceptionAdvice {
     /**
      * 根据配置参数确定错误页面
      */
-    @Value("${server.error.path:${error.path:error}}")
+    @Value("${server.error.name:${error.name:error}}")
     public String errorView;
 
 

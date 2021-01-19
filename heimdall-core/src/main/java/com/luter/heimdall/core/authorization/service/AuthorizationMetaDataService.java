@@ -61,6 +61,7 @@ public interface AuthorizationMetaDataService {
      *
      * @return the map
      * @see AuthorizationManager#isAuthorized(HttpServletRequest, boolean) AuthorizationManager#isAuthorized(HttpServletRequest, boolean)AuthorizationManager#isAuthorized(HttpServletRequest, boolean)
+     * @since 1.0.2
      */
     Map<String, Collection<String>> loadSysAuthorities();
 
@@ -74,6 +75,7 @@ public interface AuthorizationMetaDataService {
      *
      * @param session the session
      * @return the list
+     * @since 1.0.2
      */
     List<? extends GrantedAuthority> loadUserAuthorities(SimpleSession session);
 }

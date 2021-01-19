@@ -71,6 +71,8 @@ public class SessionProperty {
      * false: 不允许，踢掉前面的
      * <p>
      * true: 允许，拒绝后来的
+     *
+     * @since 1.0.2
      */
     private boolean concurrentLogin = false;
     /////////以下参数目前仅对redis生效@v1.0.0

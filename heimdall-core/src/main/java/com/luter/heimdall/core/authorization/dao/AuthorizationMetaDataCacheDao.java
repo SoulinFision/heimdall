@@ -39,6 +39,7 @@ public interface AuthorizationMetaDataCacheDao {
      * 获取系统权限
      *
      * @return the authorities
+     * @since 1.0.2
      */
     Map<String, Collection<String>> getSysAuthorities();
 

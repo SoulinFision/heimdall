@@ -20,10 +20,7 @@ package com.luter.heimdall.core.manager;
 
 import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.details.UserDetails;
-import com.luter.heimdall.core.exception.AccountException;
-import com.luter.heimdall.core.exception.ExpiredSessionException;
-import com.luter.heimdall.core.exception.InvalidSessionException;
-import com.luter.heimdall.core.exception.UnAuthticatedException;
+import com.luter.heimdall.core.exception.*;
 import com.luter.heimdall.core.manager.listener.AbstractAuthenticationEvent;
 import com.luter.heimdall.core.session.Page;
 import com.luter.heimdall.core.session.SimpleSession;
@@ -88,8 +85,8 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
         }
         //看看这个principal是不是登录了
         final SimpleSession session = sessionDAO.getByPrincipal(userDetails.getPrincipal());
-        //登录了
-        if (null != session) {
+        //登录了,并且没有过期
+        if (null != session && !session.isExpired()) {
             //把新来的拒了
             if (concurrentLogin) {
                 onLogin(0, session);
@@ -129,12 +126,12 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
      */
     public SimpleSession getUserByPrincipal(String principal) {
         if (StrUtils.isBlank(principal)) {
-            throw new IllegalArgumentException("principal参数不能为空");
+            throw new HeimdallException("principal参数不能为空");
         }
 
         final SimpleSession session = sessionDAO.getByPrincipal(principal);
         if (null != session) {
-            if (session.isTimedOut()) {
+            if (session.isExpired()) {
                 throw new ExpiredSessionException();
             }
             log.debug("这个Session已经登录了:{}", session.getId());
@@ -189,7 +186,7 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
         final SimpleSession session = sessionDAO.readSession(sessionId);
         if (null != session) {
             //Session没过期
-            if (!session.isTimedOut()) {
+            if (!session.isExpired()) {
                 log.debug("User with Principal :[{}] and SesionId :[{}] has logged in",
                         session.getDetails().getPrincipal(), session.getId());
                 //只要是登录用户,就更新续签
@@ -264,7 +261,7 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
         //因为ZSet和实际Session之间可能存在数据偏差，导致通过批量拿到的数据有null
         //此处处理一下，将null转换成空SimpleSession对象，便于调用方处理
         //当然也可直接返给调用方，调用方遍历判断是否为Null，进行处理
-        if (null != activeSessions.getRecords() && !activeSessions.getRecords().isEmpty()) {
+        if (null != activeSessions && null != activeSessions.getRecords() && !activeSessions.getRecords().isEmpty()) {
             final List<SimpleSession> collect = activeSessions.getRecords().stream().map(d -> {
                 if (null == d) {
                     return new SimpleSession();
@@ -295,7 +292,7 @@ public class AuthenticationManager extends AbstractAuthenticationEvent {
             }
 
         } else {
-            throw new IllegalArgumentException("SessionId 不能为空");
+            throw new HeimdallException("SessionId 不能为空");
         }
     }
 

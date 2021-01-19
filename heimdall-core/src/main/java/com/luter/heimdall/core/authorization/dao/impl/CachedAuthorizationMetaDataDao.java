@@ -38,12 +38,12 @@ public class CachedAuthorizationMetaDataDao implements AuthorizationMetaDataCach
     /**
      * The Cache.
      */
-    private final SimpleCache<String, Map<String, Collection<String>>> sysCache;
+    private SimpleCache<String, Map<String, Collection<String>>> sysCache;
 
     /**
      * The Cache key.
      */
-    private final String sysCacheKey;
+    private String sysCacheKey;
 
     /**
      * Instantiates a new Cached authorization dao.
@@ -56,6 +56,8 @@ public class CachedAuthorizationMetaDataDao implements AuthorizationMetaDataCach
         sysCacheKey = StrUtils.isBlank(sysKey) ? SYS_AUTHORITIES_CACHED_KEY : sysKey;
     }
 
+    public CachedAuthorizationMetaDataDao() {
+    }
 
     @Override
     public Map<String, Collection<String>> getSysAuthorities() {
@@ -89,5 +91,15 @@ public class CachedAuthorizationMetaDataDao implements AuthorizationMetaDataCach
         return sysCacheKey;
     }
 
+    public SimpleCache<String, Map<String, Collection<String>>> getSysCache() {
+        return sysCache;
+    }
 
+    public void setSysCacheKey(String sysCacheKey) {
+        this.sysCacheKey = sysCacheKey;
+    }
+
+    public void setSysCache(SimpleCache<String, Map<String, Collection<String>>> sysCache) {
+        this.sysCache = sysCache;
+    }
 }

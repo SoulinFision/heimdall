@@ -30,9 +30,10 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * The interface Session dao.
+ * SessionDao 接口定义
  *
  * @author luter
+ * @since 1.0.2 用户权限单独缓存
  */
 public interface SessionDAO {
     /**
@@ -136,7 +137,7 @@ public interface SessionDAO {
         System.out.println("======validateExpiredSessions default");
     }
 
-    /////用户权限信息缓存
+    /////用户权限信息缓存         @since 1.0.2
 
     /**
      * 用户登录成功后，缓存用户具有的权限

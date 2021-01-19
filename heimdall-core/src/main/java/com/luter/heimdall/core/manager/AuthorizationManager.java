@@ -41,6 +41,7 @@ import java.util.Map;
  * 授权管理器
  *
  * @author Luter
+ * @since 1.0.2 引入缓存配置参数
  */
 @Slf4j
 public class AuthorizationManager {

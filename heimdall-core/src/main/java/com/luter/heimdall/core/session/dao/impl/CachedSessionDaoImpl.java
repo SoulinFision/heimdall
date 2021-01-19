@@ -26,6 +26,7 @@ import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.exception.*;
 import com.luter.heimdall.core.servlet.ServletHolder;
+import com.luter.heimdall.core.session.Page;
 import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.core.session.dao.SessionDAO;
 import com.luter.heimdall.core.session.generator.SessionIdGenerator;
@@ -50,11 +51,11 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
     /**
      * Session 缓存
      */
-    private final SimpleCache<String, SimpleSession> sessionCache;
+    private SimpleCache<String, SimpleSession> sessionCache;
     /**
      * 用户权限缓存
      */
-    private final SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache;
+    private SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache;
 
     /**
      * The Session id generator.
@@ -69,6 +70,8 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
      */
     private CookieService cookieService;
 
+    public CachedSessionDaoImpl() {
+    }
 
     /**
      * Instantiates a new Cached session dao.
@@ -120,13 +123,6 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
             }
             session.setId(sessionId);
             session.setDetails(userDetails);
-            //在认证服务判断，此处注释
-//            final SimpleSession userByUniqueId = getByPrincipal(session.getDetails().getPrincipal());
-//            if (null != userByUniqueId) {
-//                log.debug("已经登录过了:{}", session.getDetails().getPrincipal());
-//                update(userByUniqueId);
-//                return userByUniqueId;
-//            }
             //拿远端IP
             if (null != servletHolder) {
                 session.setHost(WebUtils.getRemoteIp(servletHolder.getRequest()));
@@ -206,6 +202,11 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
             }
         }
         return null;
+    }
+
+    @Override
+    public Page<SimpleSession> getActiveSessions(int pageNo, int pageSize) {
+        throw new HeimdallException(" 当前缓存模式不支持分页获取在线用户列表,请切换为其他缓存或者使用非分页方式获取");
     }
 
     @Override
@@ -335,5 +336,14 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
 
     public SimpleCache<String, List<? extends GrantedAuthority>> getUserAuthCache() {
         return userAuthCache;
+    }
+
+
+    public void setSessionCache(SimpleCache<String, SimpleSession> sessionCache) {
+        this.sessionCache = sessionCache;
+    }
+
+    public void setUserAuthCache(SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache) {
+        this.userAuthCache = userAuthCache;
     }
 }

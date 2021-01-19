@@ -347,11 +347,32 @@
     </build>
     <!--    环境配置-->
     <profiles>
-        <!--maven 中央库发布-->
+        <!--        本地安装 mvn install -P inst-->
+        <profile>
+            <id>inst</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <!--  编译-->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                    </plugin>
+                    <!--配置生成源码包-->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!--maven 中央库发布 maven clean deploy -P release -->
         <profile>
             <id>release</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <build>
                 <plugins>
@@ -371,10 +392,10 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                     </plugin>
                     <!-- GPG  打包插件-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.apache.maven.plugins</groupId>-->
-<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
-<!--                    </plugin>-->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                    </plugin>
                 </plugins>
             </build>
             <!--    发布配置-->

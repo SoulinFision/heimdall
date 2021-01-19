@@ -34,6 +34,7 @@ import java.util.Set;
  * @author Luter
  */
 @Slf4j
+@Deprecated
 public class MapCache<K, V> implements SimpleCache<K, V> {
     /**
      * Backing instance.
@@ -44,7 +45,9 @@ public class MapCache<K, V> implements SimpleCache<K, V> {
      * Instantiates a new Map cache.
      *
      * @param backingMap the backing map
+     * @since 1.0.2，本地 Map 不支持过期时间设置。 废弃
      */
+    @Deprecated
     public MapCache(Map<K, V> backingMap) {
         if (backingMap == null) {
             throw new IllegalArgumentException("Backing map cannot be null.");

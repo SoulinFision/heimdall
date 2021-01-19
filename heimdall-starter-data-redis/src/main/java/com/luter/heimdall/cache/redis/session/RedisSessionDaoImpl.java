@@ -139,15 +139,6 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
             throw new NonEnabledAccountException();
         }
         session.setDetails(userDetails);
-        //在认证服务判断，此处注释
-        //根据 principal 判断用户是否登录
-//        final SimpleSession sessionIdByUid = getByPrincipal(userDetails.getPrincipal());
-//        if (null != sessionIdByUid) {
-//            log.debug("这家伙已经登录过了:{}", session.getDetails().getPrincipal());
-//            //更新一下 Session
-//            update(sessionIdByUid);
-//            return sessionIdByUid;
-//        }
         //拿远端IP
         if (null != servletHolder) {
             session.setHost(WebUtils.getRemoteIp(servletHolder.getRequest()));
@@ -285,6 +276,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
 
     @Override
     public Page<SimpleSession> getActiveSessions(int pageNo, int pageSize) {
+
         final Config config = ConfigManager.getConfig();
         //先从zset分页拿SessionId
         final Set<String> range = activeUserCache.opsForZSet().range(config.getSession().getActiveSessionCacheKey(),

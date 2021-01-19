@@ -18,38 +18,27 @@
 
 package com.luter.heimdall.sample.simple.config;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.collect.Maps;
-import com.luter.heimdall.cache.caffeinel.CaffeineCache;
+import com.luter.heimdall.cache.caffeine.CaffeineAuthorizationMetaDataDao;
+import com.luter.heimdall.cache.caffeine.CaffeineLoginPasswordRetryLimitImpl;
+import com.luter.heimdall.cache.caffeine.CaffeineSessionDaoImpl;
 import com.luter.heimdall.core.authorization.aspect.AuthorizationAnnotationAspect;
-import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.authorization.dao.AuthorizationMetaDataCacheDao;
-import com.luter.heimdall.core.authorization.dao.impl.CachedAuthorizationMetaDataDao;
 import com.luter.heimdall.core.authorization.handler.AuthorizationFilterHandler;
 import com.luter.heimdall.core.authorization.handler.DefaultAuthorizationFilterHandler;
 import com.luter.heimdall.core.authorization.service.AuthorizationMetaDataService;
-import com.luter.heimdall.core.cache.MapCache;
-import com.luter.heimdall.core.cache.SimpleCache;
 import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.cookie.SessionCookieServiceImpl;
 import com.luter.heimdall.core.manager.AuthenticationManager;
 import com.luter.heimdall.core.manager.AuthorizationManager;
+import com.luter.heimdall.core.manager.limiter.LoginPasswordRetryLimit;
 import com.luter.heimdall.core.servlet.ServletHolder;
-import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.core.session.dao.SessionDAO;
-import com.luter.heimdall.core.session.dao.impl.CachedSessionDaoImpl;
 import com.luter.heimdall.core.session.scheduler.DefaultInvalidSessionClearScheduler;
 import com.luter.heimdall.sample.common.encoder.BCryptPasswordEncoder;
 import com.luter.heimdall.sample.common.encoder.PasswordEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 基于内存缓存和常规url形式授权的配置
@@ -85,12 +74,7 @@ public class CachedSecurityConfig {
      */
     @Bean
     public SessionDAO sessionDAO(CookieService cookieService, ServletHolder servletHolder) {
-        log.warn("初始化 SessionDAO");
-        //        Session缓存
-        SimpleCache<String, SimpleSession> sessionMapCache = new MapCache<>(Maps.newConcurrentMap());
-        //Session(用户) 权限缓存
-        SimpleCache<String, List<? extends GrantedAuthority>> userAuthMapCache = new MapCache<>(Maps.newConcurrentMap());
-        return new CachedSessionDaoImpl(sessionMapCache, userAuthMapCache, servletHolder, cookieService);
+        return new CaffeineSessionDaoImpl(servletHolder, cookieService);
     }
 
     /**
@@ -118,15 +102,7 @@ public class CachedSecurityConfig {
     @Bean
     public AuthorizationMetaDataCacheDao authorizationMetaDataCacheDao() {
         log.warn("初始化 系统授权数据 MetaDataDao");
-        Cache<String, Map<String, Collection<String>>> caffeineCache = Caffeine.newBuilder()
-                .expireAfterAccess(Duration.ofHours(1))
-                .recordStats()
-                .build();
-//        Caffeine缓存
-        SimpleCache<String, Map<String, Collection<String>>> caffeineSimpleCache = new CaffeineCache<>(caffeineCache);
-//        Map 缓存
-        SimpleCache<String, Map<String, Collection<String>>> mapSimpleCache = new MapCache<>(Maps.newConcurrentMap());
-        return new CachedAuthorizationMetaDataDao(caffeineSimpleCache);
+        return new CaffeineAuthorizationMetaDataDao();
     }
 
     /**
@@ -176,5 +152,12 @@ public class CachedSecurityConfig {
         return new DefaultInvalidSessionClearScheduler(sessionDAO);
     }
 
+    /**
+     * 登录密码重试次数限制
+     */
+    @Bean
+    public LoginPasswordRetryLimit loginPasswordRetryLimit() {
+        return new CaffeineLoginPasswordRetryLimitImpl();
+    }
 
 }

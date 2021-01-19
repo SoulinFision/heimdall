@@ -31,7 +31,11 @@
     <version>1.0.2</version>
     <name>${project.artifactId}</name>
     <description>Heimdall based on redis cache and restful Url authorization Demo</description>
-
+    <properties>
+        <!--        例子不发布-->
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.github.luterc</groupId>

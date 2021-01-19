@@ -58,7 +58,11 @@ import java.util.TimeZone;
 
 
 /**
- * The type Redis config.
+ * Heimdall RedisTemplate 配置
+ * <p>
+ * key :String 存储
+ * <p>
+ * value:Json String 存储
  *
  * @author Luter
  */

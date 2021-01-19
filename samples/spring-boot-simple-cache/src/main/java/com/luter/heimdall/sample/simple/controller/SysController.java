@@ -23,6 +23,7 @@ import com.luter.heimdall.boot.starter.resolver.CurrentUser;
 import com.luter.heimdall.boot.starter.util.ResponseUtils;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.manager.AuthenticationManager;
+import com.luter.heimdall.core.manager.limiter.LoginPasswordRetryLimit;
 import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.core.session.dao.SessionDAO;
 import com.luter.heimdall.sample.common.dto.SysUserDTO;
@@ -46,7 +47,8 @@ import java.util.Collection;
 @Slf4j
 public class SysController {
 
-
+    @Autowired
+    private LoginPasswordRetryLimit retryLimit;
     /**
      * The Sys user service.
      */
@@ -85,10 +87,16 @@ public class SysController {
 //        }
         //演示
         if (!"aaaaaa".equals(password)) {
-            return ResponseUtils.fail("账号或者密码错误", null);
+            //拿用户名做 key 记录重试次数
+            retryLimit.increase(username);
+            final int count = retryLimit.leftCount(username);
+            String msg = count < 2 ? "还有 " + (count + 1) + " 次机会了..." : "账号或者密码错误";
+            return ResponseUtils.fail(msg, null);
         }
         final UserDetails userDetailsByUsername = sysUserService.getUserDetailsByUsername(username);
         final SimpleSession simpleSession = authenticationManager.login(userDetailsByUsername);
+        //登录成功后,次数清零
+        retryLimit.remove(username);
         return ResponseUtils.ok("success", simpleSession.getId());
     }
 

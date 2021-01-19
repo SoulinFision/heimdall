@@ -27,7 +27,7 @@ import java.util.Collection;
 /**
  * Session 事件监听抽象类
  * <p>
- * 主动捕获异常，避免影响主要业务的执行。事件是否发出关系不大
+ * 主动捕获异常，避免影响主要业务的执行。
  *
  * @author Luter
  */

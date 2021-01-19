@@ -113,10 +113,12 @@ public class SimpleSession {
     }
 
     /**
-     * 判断Session是否超期
+     * 判断Session是否超期,
+     * <p>
+     * 内存缓存下，用作对失效 Session 清理任务的判断
      * <p>
      * true:超期
-     * false：未正常
+     * false：正常
      *
      * @return the boolean
      */

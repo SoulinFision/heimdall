@@ -20,6 +20,12 @@ package com.luter.heimdall.core.config.property;
 
 import lombok.Data;
 
+/**
+ * 授权配置
+ *
+ * @author Luter
+ * @since 1.0.2
+ */
 @Data
 public class AuthorityProperty {
 

@@ -16,7 +16,7 @@
  *
  */
 
-package com.luter.heimdall.cache.caffeinel;
+package com.luter.heimdall.cache.caffeine;
 
 
 import com.luter.heimdall.core.cache.SimpleCache;
@@ -48,7 +48,7 @@ public class CaffeineCache<K, V> implements SimpleCache<K, V> {
      */
     public CaffeineCache(com.github.benmanes.caffeine.cache.Cache<K, V> cache) {
         this.cache = cache;
-        log.warn("初始化 Caffeine Cache 完毕");
+        log.debug("初始化 Caffeine Cache 完毕");
     }
 
 
