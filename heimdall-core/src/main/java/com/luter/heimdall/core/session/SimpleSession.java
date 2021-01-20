@@ -197,7 +197,7 @@ public class SimpleSession {
      * @param startTimestamp the start timestamp
      */
     public void setStartTimestamp(Date startTimestamp) {
-        this.startTimestamp = startTimestamp;
+        this.startTimestamp = (Date) startTimestamp.clone();
     }
 
     /**
@@ -206,7 +206,7 @@ public class SimpleSession {
      * @param lastAccessTime the last access time
      */
     public void setLastAccessTime(Date lastAccessTime) {
-        this.lastAccessTime = lastAccessTime;
+        this.lastAccessTime = (Date) lastAccessTime.clone();
     }
 
     /**
@@ -251,7 +251,7 @@ public class SimpleSession {
      * @return the start timestamp
      */
     public Date getStartTimestamp() {
-        return this.startTimestamp;
+        return (Date) this.startTimestamp.clone();
     }
 
     /**
@@ -260,7 +260,7 @@ public class SimpleSession {
      * @return the last access time
      */
     public Date getLastAccessTime() {
-        return this.lastAccessTime;
+        return (Date) this.lastAccessTime.clone();
     }
 
     /**

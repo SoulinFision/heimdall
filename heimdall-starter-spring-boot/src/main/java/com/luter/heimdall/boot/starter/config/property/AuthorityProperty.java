@@ -33,7 +33,6 @@ public class AuthorityProperty {
      */
     private String sysCachedKey = "heimdall:sysAuthorities";
     /**
-     * 注意: 过期时间只对 redis 缓存有效，内存缓存不存在过期
      * <p>
      * 系统权限在缓存中保存的时长，单位:小时.
      * <p>
@@ -53,7 +52,6 @@ public class AuthorityProperty {
      */
     private String userCachedKey = "heimdall:userAuthorities";
     /**
-     * 注意: 过期时间只对 redis 缓存有效，内存缓存不存在过期
      * <p>
      * 用户权限在缓存中保存的时长，单位:小时.
      * <p>

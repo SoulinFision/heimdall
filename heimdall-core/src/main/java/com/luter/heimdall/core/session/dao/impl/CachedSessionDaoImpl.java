@@ -102,9 +102,8 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         this.userAuthCache = userAuthCache;
         this.servletHolder = servletHolder;
         this.cookieService = cookieService;
-        this.sessionIdGenerator = null == sessionIdGenerator ? new UUIDSessionIdGeneratorImpl() : sessionIdGenerator;
+        this.sessionIdGenerator = new UUIDSessionIdGeneratorImpl();
     }
-
 
     @Override
     public SimpleSession create(UserDetails userDetails) {
