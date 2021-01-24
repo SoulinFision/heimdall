@@ -61,6 +61,6 @@ public class InvalidSessionException extends SessionException {
      * error : Session Invalid
      */
     public InvalidSessionException() {
-        super("Session Invalid");
+        super(-999,"Session Invalid");
     }
 }

@@ -79,11 +79,10 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
      * @param sessionCache  the session cache
      * @param userAuthCache the user auth cache
      * @param servletHolder the servlet holder
-     * @param cookieService the cookie service
      */
     public CachedSessionDaoImpl(SimpleCache<String, SimpleSession> sessionCache,
                                 SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache,
-                                ServletHolder servletHolder, CookieService cookieService) {
+                                ServletHolder servletHolder) {
         final Config config = ConfigManager.getConfig();
         if (null == sessionCache) {
             throw new CacheException("sessionCache 实现不能为空");
@@ -91,17 +90,9 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
         if (null == userAuthCache) {
             throw new CacheException("userAuthCache 实现不能为空");
         }
-        if (null != servletHolder && config.getCookie().getEnabled()) {
-            if (null == cookieService) {
-                throw new HeimdallException("请实现或者Set ServletHolder、cookieService实现类,或者关闭Cookie功能");
-            }
-        } else {
-            log.warn("ServletHolder 未实现,Cookie功能关闭");
-        }
         this.sessionCache = sessionCache;
         this.userAuthCache = userAuthCache;
         this.servletHolder = servletHolder;
-        this.cookieService = cookieService;
         this.sessionIdGenerator = new UUIDSessionIdGeneratorImpl();
     }
 
@@ -132,7 +123,7 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
                 if (null != cookieService) {
                     cookieService.addCookie(sessionId);
                 } else {
-                    throw new CookieException("Cookie Provider must not be null");
+                    throw new CookieException("错误:CookieService 未设置.当前已开启 Cookie功能.请设置 CookieService 或者禁用 Cookie 功能");
                 }
             } else {
                 log.debug("Cookie功能未开启");
@@ -175,14 +166,11 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
             if (null != cookieService) {
                 cookieService.delCookie();
             } else {
-                throw new CookieException("Cookie Provider must not be null");
+                throw new CookieException("错误:CookieService 未设置.当前已开启 Cookie功能.请设置 CookieService 或者禁用 Cookie 功能");
             }
         } else {
             log.debug("Cookie功能未开启");
         }
-
-        //删除用户权限缓存
-        clearUserAuthorities(session.getId());
         //发布事件
         afterDeleted(session);
     }
@@ -345,4 +333,6 @@ public class CachedSessionDaoImpl extends AbstractSessionEvent implements Sessio
     public void setUserAuthCache(SimpleCache<String, List<? extends GrantedAuthority>> userAuthCache) {
         this.userAuthCache = userAuthCache;
     }
+
+
 }

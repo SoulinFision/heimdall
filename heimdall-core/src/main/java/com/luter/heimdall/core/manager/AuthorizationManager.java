@@ -206,12 +206,12 @@ public class AuthorizationManager {
         }
         if (ConfigManager.getConfig().getAuthority().isUserCachedEnabled()) {
             //从缓存获取用户权限
-            log.warn("用户权限缓存开启,从缓存获取用户权限");
+            log.debug("用户权限缓存开启,从缓存获取用户权限");
             final SessionDAO sessionDAO = authenticationManager.getSessionDAO();
             List<? extends GrantedAuthority> userAuthorities = sessionDAO.getUserAuthorities(currentUser.getId());
             //缓存中没有，通过接口从数据库获取
             if (null == userAuthorities || userAuthorities.isEmpty()) {
-                log.warn("用户权限缓存开启,通过接口从数据库获取");
+                log.debug("用户权限缓存开启,通过接口从数据库获取");
                 userAuthorities = authorizationMetaDataService.loadUserAuthorities(currentUser);
                 //数据库也没有，抛出无权限异常
                 if (null == userAuthorities || userAuthorities.isEmpty()) {

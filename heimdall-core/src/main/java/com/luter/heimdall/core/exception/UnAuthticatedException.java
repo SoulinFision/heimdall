@@ -61,7 +61,7 @@ public class UnAuthticatedException extends AccountException {
      * error:The current User is not authenticated.  Access denied.
      */
     public UnAuthticatedException() {
-        super("The current User is not authenticated.  Access denied.");
+        super(-401,"The current User is not authenticated.  Access denied.");
     }
 
 }

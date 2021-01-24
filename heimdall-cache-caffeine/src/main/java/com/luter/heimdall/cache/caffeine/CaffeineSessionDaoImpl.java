@@ -24,7 +24,6 @@ import com.luter.heimdall.core.authorization.authority.GrantedAuthority;
 import com.luter.heimdall.core.cache.SimpleCache;
 import com.luter.heimdall.core.config.Config;
 import com.luter.heimdall.core.config.ConfigManager;
-import com.luter.heimdall.core.cookie.CookieService;
 import com.luter.heimdall.core.servlet.ServletHolder;
 import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.core.session.dao.impl.CachedSessionDaoImpl;
@@ -46,10 +45,9 @@ public class CaffeineSessionDaoImpl extends CachedSessionDaoImpl {
      * 基于 Caffeine 的 Session 缓存Dao
      *
      * @param servletHolder the servlet holder
-     * @param cookieService the cookie service
      * @since 1.0.2
      */
-    public CaffeineSessionDaoImpl(ServletHolder servletHolder, CookieService cookieService) {
+    public CaffeineSessionDaoImpl(ServletHolder servletHolder) {
         super();
         final Config config = ConfigManager.getConfig();
         Cache<String, SimpleSession> sessionCache = Caffeine.newBuilder()
@@ -65,7 +63,6 @@ public class CaffeineSessionDaoImpl extends CachedSessionDaoImpl {
         this.setSessionCache(simSessionCache);
         this.setUserAuthCache(simpleUserAuthCache);
         this.setServletHolder(servletHolder);
-        this.setCookieService(cookieService);
         this.setSessionIdGenerator(new UUIDSessionIdGeneratorImpl());
     }
 }

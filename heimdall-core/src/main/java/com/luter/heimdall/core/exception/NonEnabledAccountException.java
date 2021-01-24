@@ -60,7 +60,7 @@ public class NonEnabledAccountException extends AccountException {
      * error:Account is not enabled now . Access denied
      */
     public NonEnabledAccountException() {
-        super("Account is not enabled now . Access denied.");
+        super(-998, "Account is not enabled now . Access denied.");
     }
 
 }

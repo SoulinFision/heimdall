@@ -91,14 +91,15 @@ public class RedisSecurityConfig {
     /**
      * Session dao session dao.
      *
-     * @param cookieService the cookie service
      * @param servletHolder the servlet holder
      * @return the session dao
      */
     @Bean
     public SessionDAO sessionDAO(CookieService cookieService, ServletHolder servletHolder) {
         log.warn("初始化 SessionDAO");
-        return new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, userAuthRedisTemplate, servletHolder, cookieService);
+        final RedisSessionDaoImpl sessionDao = new RedisSessionDaoImpl(sessionRedisTemplate, stringRedisTemplate, userAuthRedisTemplate, servletHolder);
+        sessionDao.setCookieService(cookieService);
+        return sessionDao;
     }
 
     /**

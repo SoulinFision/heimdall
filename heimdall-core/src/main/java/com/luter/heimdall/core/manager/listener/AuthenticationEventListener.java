@@ -31,7 +31,9 @@ public interface AuthenticationEventListener {
     /**
      * 认证登录成功
      *
-     * @param code    状态码 1： 重复登录，2：登录成功
+     * @param code    0: 重复登录，新来的被拒绝登录
+     *                1： 重复登录，上一个登录 Session 被踢出
+     *                2：登录成功，创建了新 Session
      * @param session the session
      */
     default void onLogin(int code, SimpleSession session) {

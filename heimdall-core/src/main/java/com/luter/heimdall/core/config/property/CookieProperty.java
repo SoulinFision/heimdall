@@ -30,7 +30,7 @@ public class CookieProperty {
     /**
      * 是否开启cookie
      */
-    private Boolean enabled = true;
+    private Boolean enabled = false;
     /**
      * cookie名称,尽量与SessionName保持一致，也可不同
      */

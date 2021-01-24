@@ -53,7 +53,7 @@ public class UnAuthorizedException extends AccountException {
      * error: The current User is not authorized.  Access denied.
      */
     public UnAuthorizedException() {
-        super("The current User is not authorized.  Access denied.");
+        super(-403, "The current User is not authorized.  Access denied.");
     }
 
     /**

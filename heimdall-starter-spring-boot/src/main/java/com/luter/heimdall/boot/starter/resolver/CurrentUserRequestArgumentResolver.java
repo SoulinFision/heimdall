@@ -20,10 +20,9 @@ package com.luter.heimdall.boot.starter.resolver;
 
 
 import com.luter.heimdall.core.manager.AuthenticationManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -67,13 +66,10 @@ import javax.servlet.http.HttpServletRequest;
  * @see AuthenticationManager#getCurrentUser() AuthenticationManager#getCurrentUser()
  */
 @Slf4j
-@Service
+@RequiredArgsConstructor
 public class CurrentUserRequestArgumentResolver implements HandlerMethodArgumentResolver {
-    /**
-     * The Authentication manager.
-     */
-    @Autowired
-    private AuthenticationManager authenticationManager;
+
+    private final AuthenticationManager authenticationManager;
 
     /**
      * 入参筛选

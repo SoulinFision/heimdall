@@ -59,6 +59,6 @@ public class ExcessiveAttemptsException extends HeimdallException {
      * Instantiates a new Excessive attempts exception.
      */
     public ExcessiveAttemptsException() {
-        super("too much authentication attempts, you will be  banned for a while !");
+        super(-423,"too much authentication attempts, you will be  banned for a while !");
     }
 }

@@ -18,6 +18,7 @@
 
 package com.luter.heimdall.sample.simple.config;
 
+import com.luter.heimdall.boot.starter.resolver.CurrentUserRequestArgumentResolver;
 import com.luter.heimdall.cache.caffeine.CaffeineAuthorizationMetaDataDao;
 import com.luter.heimdall.cache.caffeine.CaffeineLoginPasswordRetryLimitImpl;
 import com.luter.heimdall.cache.caffeine.CaffeineSessionDaoImpl;
@@ -50,6 +51,8 @@ import org.springframework.context.annotation.Configuration;
 public class CachedSecurityConfig {
     /**
      * 密码加密解密实现
+     *
+     * @return the password encoder
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -59,6 +62,7 @@ public class CachedSecurityConfig {
     /**
      * Cookie服务
      *
+     * @param servletHolder the servlet holder
      * @return the cookie service
      */
     @Bean
@@ -67,14 +71,25 @@ public class CachedSecurityConfig {
     }
 
     /**
+     * 当前登录用户参数注解解析
+     *
+     * @param authenticationManager the authentication manager
+     * @return the current user request argument resolver
+     */
+    @Bean
+    public CurrentUserRequestArgumentResolver currentUserRequestArgumentResolver(AuthenticationManager authenticationManager) {
+        return new CurrentUserRequestArgumentResolver(authenticationManager);
+    }
+
+    /**
      * Session缓存Dao
      *
-     * @param cookieService the cookie service
+     * @param servletHolder the servlet holder
      * @return the session dao
      */
     @Bean
-    public SessionDAO sessionDAO(CookieService cookieService, ServletHolder servletHolder) {
-        return new CaffeineSessionDaoImpl(servletHolder, cookieService);
+    public SessionDAO sessionDAO(ServletHolder servletHolder) {
+        return new CaffeineSessionDaoImpl(servletHolder);
     }
 
     /**
@@ -108,7 +123,9 @@ public class CachedSecurityConfig {
     /**
      * 授权管理器
      *
-     * @param authenticationManager 认证管理器
+     * @param authenticationManager         认证管理器
+     * @param authorizationMetaDataService  the authorization meta data service
+     * @param authorizationMetaDataCacheDao the authorization meta data cache dao
      * @return the authorization manager
      */
     @Bean
@@ -121,6 +138,10 @@ public class CachedSecurityConfig {
 
     /**
      * 授权校验
+     *
+     * @param authenticationManager the authentication manager
+     * @param authorizationManager  the authorization manager
+     * @return the authorization filter handler
      */
     @Bean
     public AuthorizationFilterHandler securityFilterHandler(AuthenticationManager authenticationManager
@@ -132,6 +153,7 @@ public class CachedSecurityConfig {
     /**
      * 开启注解授权验证
      *
+     * @param authorizationFilterHandler the authorization filter handler
      * @return the security annotation aspect handler
      */
     @Bean
@@ -154,6 +176,8 @@ public class CachedSecurityConfig {
 
     /**
      * 登录密码重试次数限制
+     *
+     * @return the login password retry limit
      */
     @Bean
     public LoginPasswordRetryLimit loginPasswordRetryLimit() {

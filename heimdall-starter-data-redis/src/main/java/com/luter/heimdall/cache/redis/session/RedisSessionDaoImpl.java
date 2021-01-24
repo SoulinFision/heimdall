@@ -79,7 +79,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     /**
      * The Cookie provider.
      */
-    private CookieService cookieProvider;
+    private CookieService cookieService;
 
 
     /**
@@ -89,11 +89,10 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
      * @param activeUserCache 在线用户缓存 RedisTemplate
      * @param userAuthCache   用户权限缓存 RedisTemplate
      * @param servletHolder   Request 请求持有实现
-     * @param cookieProvider  Cookie 生成实现
      */
     public RedisSessionDaoImpl(RedisTemplate<String, SimpleSession> sessionCache, StringRedisTemplate activeUserCache,
                                RedisTemplate<String, List<? extends GrantedAuthority>> userAuthCache,
-                               ServletHolder servletHolder, CookieService cookieProvider) {
+                               ServletHolder servletHolder) {
         if (null == sessionCache) {
             throw new SessionException("sessionCache 不能为空");
         }
@@ -103,25 +102,15 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         if (null == userAuthCache) {
             throw new SessionException("userAuthCache 不能为空");
         }
-        final Config config = ConfigManager.getConfig();
-        if (config.getCookie().getEnabled()) {
-            if (null == servletHolder || null == cookieProvider) {
-                throw new CookieException("请实现或者Set ServletHolder、cookieProvider实现类,或者关闭Cookie功能");
-            }
-        }
         this.sessionCache = sessionCache;
         this.userAuthCache = userAuthCache;
         this.sessionIdGenerator = new UUIDSessionIdGeneratorImpl();
         this.activeUserCache = activeUserCache;
         this.servletHolder = servletHolder;
-        this.cookieProvider = cookieProvider;
     }
 
     @Override
     public SimpleSession create(UserDetails userDetails) {
-        if (null == sessionCache) {
-            throw new CacheException("cache must not be null");
-        }
         if (null == sessionIdGenerator) {
             throw new HeimdallException("sessionIdGenerator  must not be null");
         }
@@ -147,19 +136,17 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         session.setTimeout(globalSessionTimeout);
         //存redis
         sessionCache.opsForValue().set(getSessionIdPrefix() + sessionId, session, globalSessionTimeout, TimeUnit.SECONDS);
-        if (null != activeUserCache) {
-            LocalDateTime localDateTime = LocalDateTime.now();
-            //把当天日期作为 Score
-            final String score = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            activeUserCache.opsForZSet().add(getActiveSessionCacheKey(), session.getId(), Long.parseLong(score));
-            activeUserCache.opsForHash().put(getActiveUserCacheKey(), session.getDetails().getPrincipal(), session.getId());
-        }
+        LocalDateTime localDateTime = LocalDateTime.now();
+        //把当天日期作为 Score
+        final String score = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        activeUserCache.opsForZSet().add(getActiveSessionCacheKey(), session.getId(), Long.parseLong(score));
+        activeUserCache.opsForHash().put(getActiveUserCacheKey(), session.getDetails().getPrincipal(), session.getId());
         //写入cookie
         if (config.getCookie().getEnabled()) {
-            if (null != cookieProvider) {
-                cookieProvider.addCookie(sessionId);
+            if (null != cookieService) {
+                cookieService.addCookie(sessionId);
             } else {
-                throw new CookieException("Cookie Provider must not be null");
+                throw new CookieException("错误:CookieService 未设置.当前已开启 Cookie功能.请设置 CookieService 或者禁用 Cookie 功能");
             }
         } else {
             log.warn("Cookie 功能未开启");
@@ -247,20 +234,16 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
         clearUserAuthorities(session.getId());
         //删除用户 Session 缓存
         sessionCache.delete(getSessionIdPrefix() + session.getId());
-        if (null != activeUserCache) {
-            activeUserCache.opsForZSet().remove(getActiveSessionCacheKey(), session.getId());
-            activeUserCache.opsForHash().delete(getActiveUserCacheKey(), session.getDetails().getPrincipal());
-        }
+        activeUserCache.opsForZSet().remove(getActiveSessionCacheKey(), session.getId());
+        activeUserCache.opsForHash().delete(getActiveUserCacheKey(), session.getDetails().getPrincipal());
         //删除cookie
         if (config.getCookie().getEnabled()) {
-            if (null != cookieProvider) {
-                cookieProvider.delCookie();
+            if (null != cookieService) {
+                cookieService.delCookie();
             } else {
-                throw new CookieException("Cookie Provider must not be null");
+                throw new CookieException("错误:CookieService 未设置.当前已开启 Cookie功能.请设置 CookieService 或者禁用 Cookie 功能");
             }
         }
-        //删除用户权限缓存
-        clearUserAuthorities(session.getId());
         //发布事件
         afterDeleted(session);
     }
@@ -473,7 +456,7 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     public void clearUserAuthorities(String sessionId) {
         if (StrUtils.isNotBlank(sessionId)) {
             final AuthorityProperty authority = ConfigManager.getConfig().getAuthority();
-            log.warn("清理系统用户缓存，SessionId:[{}]", sessionId);
+            log.info("清理系统用户缓存，SessionId:[{}]", sessionId);
             userAuthCache.opsForHash().delete(authority.getUserCachedKey(), sessionId);
         } else {
             log.warn("清理用户权限缓存失败，SessionID 为空");
@@ -540,16 +523,16 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
 
     @Override
     public CookieService getCookieService() {
-        return cookieProvider;
+        return cookieService;
     }
 
     /**
      * Sets cookie provider.
      *
-     * @param cookieProvider the cookie provider
+     * @param cookieService the cookie provider
      */
-    public void setCookieProvider(CookieService cookieProvider) {
-        this.cookieProvider = cookieProvider;
+    public void setCookieService(CookieService cookieService) {
+        this.cookieService = cookieService;
     }
 
     /**

@@ -31,4 +31,5 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class MvcConfig extends AbstractWebMvcConfigurer {
 
+
 }

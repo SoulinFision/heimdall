@@ -1,5 +1,13 @@
 #Changelog
 
+## v1.0.3()
+
+* 取消CurrentUserRequestArgumentResolver自动注册，改为手动注册
+* 优化 SessionDao 构造方式，去掉 CookieService
+* 修复用户权限缓存重复清理两次的 bug
+* 将 Cookie功能 默认开启 修改为: 默认关闭
+
+
 ##v1.0.2 (20210120)
 * 本地 MapCache 缓存，不支持过期策略，废弃
 * 实现 Caffeine Session 缓存和权限缓存

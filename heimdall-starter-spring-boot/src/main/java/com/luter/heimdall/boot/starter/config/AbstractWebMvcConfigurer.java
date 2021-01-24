@@ -19,15 +19,11 @@
 package com.luter.heimdall.boot.starter.config;
 
 import com.luter.heimdall.boot.starter.interceptor.PermBasedAuthorizeInterceptor;
-import com.luter.heimdall.boot.starter.resolver.CurrentUserRequestArgumentResolver;
 import com.luter.heimdall.core.manager.AuthorizationManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
 
 /**
  * 默认权限 MVC 默认配置
@@ -44,18 +40,6 @@ import java.util.List;
  */
 @Slf4j
 public abstract class AbstractWebMvcConfigurer implements WebMvcConfigurer {
-    /**
-     * The Current user request argument resolver.
-     */
-    @Autowired
-    private CurrentUserRequestArgumentResolver currentUserRequestArgumentResolver;
-
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-        log.warn("初始化 当前用户参数注解解析器");
-        argumentResolvers.add(currentUserRequestArgumentResolver);
-    }
-
     /**
      * 认证管理器
      */
