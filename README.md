@@ -48,7 +48,8 @@
 * **注解授权**，是否登录、单角色、多角色、单权限、多权限授权
 * **基于拦截器的的资源授权**，支持restful资源授权
 * **Session 自动续签**(Redis 缓存下避免频繁update缓存，可设置Session续签规则)
-* **重复登录限制**、登录用户强制下线功能
+* **重复登录限制** 登录用户强制下线功能
+* **登录错误重试限制** 支持登录重试次数限制，超过限制后，账户锁定一定时长。
 * **脚手架**: spring-boot 2x 的starter脚手架，便于快速集成
 * **示例项目**:基于spring boot 2x 实现的传统url权限与restful权限示例项目，稍加配置即可应用。
 * *更多功能持续完善中......*
@@ -65,8 +66,13 @@
 
 
 ## 交流反馈,参与贡献
+- Github
 
-**github仓库：** https://github.com/luterc/heimdall
+<a target="_blank" href="https://github.com/luterc/heimdall">**Heimdall 框架**</a>
+
+<a target="_blank" href="https://github.com/luterc/heimdall-admin">**Heimdall-admin  权限管理系统** </a>
+
+<a target="_blank" href="https://github.com/luterc/heimdall-admin-ui">**Heimdall-admin-ui  管理系统前端 UI** </a>
 
 **技术交流QQ群:	554290469**
 

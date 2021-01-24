@@ -1,6 +1,6 @@
 #Changelog
 
-## v1.0.3()
+## v1.0.3(20210124)
 
 * 取消CurrentUserRequestArgumentResolver自动注册，改为手动注册
 * 优化 SessionDao 构造方式，去掉 CookieService
