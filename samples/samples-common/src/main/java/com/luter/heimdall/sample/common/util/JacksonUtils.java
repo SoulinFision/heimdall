@@ -1,22 +1,4 @@
-/*
- *
- *  *    Copyright 2020-2021 Luter.me
- *  *
- *  *    Licensed under the Apache License, Version 2.0 (the "License");
- *  *    you may not use this file except in compliance with the License.
- *  *    You may obtain a copy of the License at
- *  *
- *  *      http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  *    Unless required by applicable law or agreed to in writing, software
- *  *    distributed under the License is distributed on an "AS IS" BASIS,
- *  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  *    See the License for the specific language governing permissions and
- *  *    limitations under the License.
- *
- */
-
-package com.luter.heimdall.boot.starter.util;
+package com.luter.heimdall.sample.common.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,39 +19,26 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 
-/**
- * Jackson工具类
- *
- * @author Luter
- */
 @SuppressWarnings("unchecked")
 @Slf4j
 public final class JacksonUtils {
-    /**
-     * The constant OBJECT_MAPPER.
-     */
     private final static ObjectMapper OBJECT_MAPPER;
-    /**
-     * The constant DEFAULT_DATE_TIME_FORMAT.
-     */
     private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    /**
-     * The constant DEFAULT_DATE_FORMAT.
-     */
     private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
-    /**
-     * The constant DEFAULT_TIME_FORMAT.
-     */
     private static final String DEFAULT_TIME_FORMAT = "HH:mm:ss";
 
     static {
@@ -77,34 +46,18 @@ public final class JacksonUtils {
     }
 
 
-    /**
-     * 获取ObjectMapper
-     *
-     * @return the object mapper
-     */
     public static ObjectMapper getObjectMapper() {
         return OBJECT_MAPPER;
     }
 
-    /**
-     * 以默认参数 初始化 ObjectMapper
-     *
-     * @param objectMapper the object mapper
-     * @return the object mapper
-     */
     public static ObjectMapper initObjectMapper(ObjectMapper objectMapper) {
         if (Objects.isNull(objectMapper)) {
             objectMapper = new ObjectMapper();
         }
+        log.warn("初始化 Jackson 工具类");
         return doInitObjectMapper(objectMapper);
     }
 
-    /**
-     * 初始化 ObjectMapper 时间方法
-     *
-     * @param objectMapper the object mapper
-     * @return the object mapper
-     */
     private static ObjectMapper doInitObjectMapper(ObjectMapper objectMapper) {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         //不显示为null的字段
@@ -120,12 +73,6 @@ public final class JacksonUtils {
         return registerModule(objectMapper);
     }
 
-    /**
-     * 为 ObjectMapper 注册模块，包括常见日期时间 参数名称，时区设置等
-     *
-     * @param objectMapper the object mapper
-     * @return the object mapper
-     */
     public static ObjectMapper registerModule(ObjectMapper objectMapper) {
         // 指定时区
         objectMapper.setTimeZone(TimeZone.getTimeZone("GMT+8"));
@@ -149,12 +96,16 @@ public final class JacksonUtils {
     }
 
 
-    /**
-     * 对象转换成JSON字符串
-     *
-     * @param object 对象
-     * @return json字符串 string
-     */
+    public static Consumer<HttpMessageConverter<?>> wrapperObjectMapper() {
+        return converter -> {
+            if (converter instanceof MappingJackson2HttpMessageConverter) {
+                MappingJackson2HttpMessageConverter httpMessageConverter = (MappingJackson2HttpMessageConverter) converter;
+                httpMessageConverter.setDefaultCharset(StandardCharsets.UTF_8);
+                registerModule(httpMessageConverter.getObjectMapper());
+            }
+        };
+    }
+
     public static String toJson(Object object) {
         if (isCharSequence(object)) {
             return (String) object;
@@ -166,12 +117,6 @@ public final class JacksonUtils {
         }
     }
 
-    /**
-     * 转换Json
-     *
-     * @param object 对象
-     * @return 字符串 string
-     */
     public static String toPrettyJson(Object object) {
         if (isCharSequence(object)) {
             return (String) object;
@@ -183,34 +128,14 @@ public final class JacksonUtils {
         }
     }
 
-    /**
-     * <p>
-     * 是否为CharSequence类型
-     * </p>
-     *
-     * @param object the object
-     * @return the boolean
-     */
     public static Boolean isCharSequence(Object object) {
         return !Objects.isNull(object) && isCharSequence(object.getClass());
     }
 
-    /**
-     * Is char sequence boolean.
-     *
-     * @param clazz the clazz
-     * @return the boolean
-     */
     public static boolean isCharSequence(Class<?> clazz) {
         return clazz != null && CharSequence.class.isAssignableFrom(clazz);
     }
 
-    /**
-     * Json转换为对象 转换失败返回null
-     *
-     * @param json the json
-     * @return the object
-     */
     public static Object parse(String json) {
         Object object = null;
         try {
@@ -220,14 +145,6 @@ public final class JacksonUtils {
         return object;
     }
 
-    /**
-     * Json转换为对象 转换失败返回null
-     *
-     * @param <T>   the type parameter
-     * @param json  the json
-     * @param clazz the clazz
-     * @return the t
-     */
     public static <T> T readValue(String json, Class<T> clazz) {
         T t = null;
         try {
@@ -237,15 +154,6 @@ public final class JacksonUtils {
         return t;
     }
 
-    /**
-     * Json转换为对象 转换失败返回null
-     *
-     * @param <T>          the type parameter
-     * @param json         the json
-     * @param valueTypeRef the value type ref
-     * @return the t
-     */
-    @SuppressWarnings("unchecked")
     public static <T> T readValue(String json, TypeReference valueTypeRef) {
         T t = null;
         try {
@@ -255,12 +163,6 @@ public final class JacksonUtils {
         return t;
     }
 
-    /**
-     * Map to jon string.
-     *
-     * @param object the object
-     * @return the string
-     */
     public static String mapToJson(Object object) {
         try {
             return getObjectMapper().writeValueAsString(object);
@@ -271,14 +173,7 @@ public final class JacksonUtils {
         return null;
     }
 
-    /**
-     * List to jon string.
-     *
-     * @param list the list
-     * @return the string
-     */
-    @SuppressWarnings("unchecked")
-    public static String listToJson(List list) {
+    public static String listToJSON(List list) {
         try {
             return getObjectMapper().writeValueAsString(list);
         } catch (JsonProcessingException e) {
@@ -289,43 +184,14 @@ public final class JacksonUtils {
         return null;
     }
 
-    /**
-     * Object to json string.
-     *
-     * @param object the object
-     * @return the string
-     */
     public static String objectToJson(Object object) {
-        try {
-            return getObjectMapper().writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            log.error("JSON转换错误:" + e.getMessage());
-
-        }
-        return null;
+        return toJson(object);
     }
 
-    /**
-     * Map to pojo t.
-     *
-     * @param <T>   the type parameter
-     * @param map   the map
-     * @param clazz the clazz
-     * @return the t
-     */
-    @SuppressWarnings("unchecked")
     public static <T> T mapToPojo(Map map, Class<T> clazz) {
         return getObjectMapper().convertValue(map, clazz);
     }
 
-    /**
-     * Json to object t.
-     *
-     * @param <T>          the type parameter
-     * @param jsonArrayStr the json array str
-     * @param clazz        the clazz
-     * @return the t
-     */
     public static <T> T jsonToObject(String jsonArrayStr, Class<T> clazz) {
         try {
             return getObjectMapper().readValue(jsonArrayStr, clazz);
@@ -335,14 +201,6 @@ public final class JacksonUtils {
         }
     }
 
-    /**
-     * Json to object list list.
-     *
-     * @param <T>          the type parameter
-     * @param jsonArrayStr the json array str
-     * @param clazz        the clazz
-     * @return the list
-     */
     public static <T> List<T> jsonToObjectList(String jsonArrayStr, Class<T> clazz) {
         List<Map<String, Object>> list;
         try {

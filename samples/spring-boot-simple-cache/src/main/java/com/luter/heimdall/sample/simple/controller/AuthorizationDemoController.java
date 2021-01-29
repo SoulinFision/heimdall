@@ -18,8 +18,8 @@
 
 package com.luter.heimdall.sample.simple.controller;
 
-import com.luter.heimdall.boot.starter.model.ResponseVO;
-import com.luter.heimdall.boot.starter.util.ResponseUtils;
+import com.luter.heimdall.sample.common.vo.ResponseVO;
+import com.luter.heimdall.sample.common.util.ResponseUtils;
 import com.luter.heimdall.sample.simple.service.AuthorizationDemoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

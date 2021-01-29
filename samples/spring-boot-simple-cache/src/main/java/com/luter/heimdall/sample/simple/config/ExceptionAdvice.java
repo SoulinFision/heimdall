@@ -18,7 +18,7 @@
 
 package com.luter.heimdall.sample.simple.config;
 
-import com.luter.heimdall.boot.starter.exception.AbstractHeimdalExceptionAdvice;
+import com.luter.heimdall.sample.common.exception.AbstractHeimdalExceptionAdvice;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;

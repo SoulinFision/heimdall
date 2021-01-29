@@ -17,7 +17,7 @@
  *
  */
 
-package com.luter.heimdall.boot.starter.model;
+package com.luter.heimdall.sample.common.vo;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;

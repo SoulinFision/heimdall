@@ -18,13 +18,13 @@
 
 package com.luter.heimdall.sample.restful.controller;
 
-import com.luter.heimdall.boot.starter.model.ResponseVO;
+import com.luter.heimdall.sample.common.vo.ResponseVO;
 import com.luter.heimdall.boot.starter.resolver.CurrentUser;
-import com.luter.heimdall.boot.starter.util.ResponseUtils;
 import com.luter.heimdall.core.details.UserDetails;
 import com.luter.heimdall.core.manager.AuthenticationManager;
 import com.luter.heimdall.core.session.Page;
 import com.luter.heimdall.core.session.SimpleSession;
+import com.luter.heimdall.sample.common.util.ResponseUtils;
 import com.luter.heimdall.sample.restful.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

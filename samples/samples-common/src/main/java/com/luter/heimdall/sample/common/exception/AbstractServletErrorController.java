@@ -16,14 +16,13 @@
  *
  */
 
-package com.luter.heimdall.boot.starter.exception;
+package com.luter.heimdall.sample.common.exception;
 
-
-import com.luter.heimdall.boot.starter.model.ResponseVO;
-import com.luter.heimdall.boot.starter.util.JacksonUtils;
-import com.luter.heimdall.boot.starter.util.ResponseUtils;
 import com.luter.heimdall.core.exception.UnAuthorizedException;
 import com.luter.heimdall.core.exception.UnAuthticatedException;
+import com.luter.heimdall.sample.common.util.JacksonUtils;
+import com.luter.heimdall.sample.common.util.ResponseUtils;
+import com.luter.heimdall.sample.common.vo.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,13 +40,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
-/**
- * whiteLabel 页面消息自定义处理
- *
- * @author Luter
- */
 @Slf4j
-public class BaseServletErrorController extends BasicErrorController {
+public class AbstractServletErrorController extends BasicErrorController {
     /**
      * Instantiates a new Base servlet error controller.
      *
@@ -56,9 +50,9 @@ public class BaseServletErrorController extends BasicErrorController {
      * @param errorViewResolvers the error view resolvers
      */
     @Autowired
-    public BaseServletErrorController(ErrorAttributes errorAttributes,
-                                      ServerProperties serverProperties,
-                                      List<ErrorViewResolver> errorViewResolvers) {
+    public AbstractServletErrorController(ErrorAttributes errorAttributes,
+                                          ServerProperties serverProperties,
+                                          List<ErrorViewResolver> errorViewResolvers) {
         super(errorAttributes, serverProperties.getError(), errorViewResolvers);
     }
 
@@ -103,7 +97,7 @@ public class BaseServletErrorController extends BasicErrorController {
      * @param request the request
      * @return the error
      */
-    private ResponseVO<Void> getError(HttpServletRequest request) {
+    public ResponseVO<Void> getError(HttpServletRequest request) {
         final ErrorAttributeOptions of = ErrorAttributeOptions.of(
                 ErrorAttributeOptions.Include.BINDING_ERRORS,
                 ErrorAttributeOptions.Include.EXCEPTION,

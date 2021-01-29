@@ -1,6 +1,14 @@
 #Changelog
+## v1.0.4(20210129)-调整SpringBoot Starter默认实现
 
-## v1.0.3(20210124)
+* 调整 SpringBoot Starter ，去除特定业务依赖，只保留 Heimdall 框架相关功能。
+* 移除全局异常处理实现，由 Sample 示例程序实现
+* 移除全局异常 Controller实现，由 Sample 示例程序实现
+* resolver 依赖由AutoWired调整为构造函数注入
+* 移除 Heimdall 配置参数日志输出
+    
+
+## v1.0.3(20210124) -优化默认配置
 
 * 取消CurrentUserRequestArgumentResolver自动注册，改为手动注册
 * 优化 SessionDao 构造方式，去掉 CookieService
@@ -8,7 +16,7 @@
 * 将 Cookie功能 默认开启 修改为: 默认关闭
 
 
-##v1.0.2 (20210120)
+##v1.0.2 (20210120) -新增和优化功能
 * 本地 MapCache 缓存，不支持过期策略，废弃
 * 实现 Caffeine Session 缓存和权限缓存
 * 实现用户权限单独缓存,便于动态授权

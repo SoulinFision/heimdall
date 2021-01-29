@@ -1,4 +1,3 @@
-
 /*
  *
  *  *    Copyright 2020-2021 Luter.me
@@ -17,14 +16,13 @@
  *
  */
 
-package com.luter.heimdall.boot.starter.exception;
+package com.luter.heimdall.sample.common.exception;
 
-
-import com.luter.heimdall.boot.starter.model.ResponseVO;
-import com.luter.heimdall.boot.starter.util.ResponseUtils;
 import com.luter.heimdall.core.exception.ExpiredSessionException;
 import com.luter.heimdall.core.exception.UnAuthorizedException;
 import com.luter.heimdall.core.exception.UnAuthticatedException;
+import com.luter.heimdall.sample.common.util.ResponseUtils;
+import com.luter.heimdall.sample.common.vo.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

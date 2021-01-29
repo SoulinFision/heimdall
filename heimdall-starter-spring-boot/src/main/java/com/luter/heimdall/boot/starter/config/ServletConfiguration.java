@@ -19,7 +19,6 @@
 package com.luter.heimdall.boot.starter.config;
 
 import com.luter.heimdall.boot.starter.servlet.ServletHolderImpl;
-import com.luter.heimdall.boot.starter.util.JacksonUtils;
 import com.luter.heimdall.core.config.Config;
 import com.luter.heimdall.core.config.ConfigManager;
 import com.luter.heimdall.core.config.property.AuthorityProperty;
@@ -69,7 +68,6 @@ public class ServletConfiguration {
         BeanUtils.copyProperties(config.getAuthority(), authorityProperty);
         c.setAuthority(authorityProperty);
         ConfigManager.setConfig(c);
-        log.warn("配置参数初始化完毕:\n{}", JacksonUtils.toPrettyJson(c));
         return new ServletHolderImpl();
     }
 

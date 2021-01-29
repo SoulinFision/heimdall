@@ -16,9 +16,8 @@
  *
  */
 
-package com.luter.heimdall.boot.starter.config;
+package com.luter.heimdall.sample.common.exception;
 
-import com.luter.heimdall.boot.starter.exception.BaseServletErrorController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -35,11 +34,6 @@ import org.springframework.web.servlet.DispatcherServlet;
 import javax.servlet.Servlet;
 import java.util.List;
 
-/**
- * Servlet 异常处理控制器注册
- *
- * @author Luter
- */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass({Servlet.class, DispatcherServlet.class})
@@ -59,6 +53,6 @@ public class BasicErrorControllerConfig {
                                                      ServerProperties serverProperties,
                                                      List<ErrorViewResolver> errorViewResolvers) {
         log.warn("初始化 全局 Servlet ErrorController ");
-        return new BaseServletErrorController(errorAttributes, serverProperties, errorViewResolvers);
+        return new AbstractServletErrorController(errorAttributes, serverProperties, errorViewResolvers);
     }
 }
