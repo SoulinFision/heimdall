@@ -283,9 +283,10 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
                     }
                     return null;
                 }).collect(Collectors.toList());
-                Long count = activeUserCache.opsForZSet().count(config.getSession().getActiveSessionCacheKey(), 0, 100000000);
-                if (null == count) {
-                    count = 0L;
+                final Set<String> keys = sessionCache.keys(getSessionIdPrefix() + "*");
+                long count = 0L;
+                if (null != keys && !keys.isEmpty()) {
+                    count = keys.size();
                 }
                 log.debug("分页获取在线用户，在线用户总数:{},本页数据总数:{}", count, records.size());
                 return new Page<>(pageNo, pageSize, count, records);
@@ -598,5 +599,6 @@ public class RedisSessionDaoImpl extends AbstractSessionEvent implements Session
     private long getEnd(int page, int size) {
         return page * size;
     }
+
 
 }

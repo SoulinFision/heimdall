@@ -1,4 +1,8 @@
 #Changelog
+
+## v1.0.5(20210129)-在线用户总数逻辑优化
+* 调整获取在线用户总数的方法，改成通过实际 SessionId 缓存获取
+
 ## v1.0.4(20210129)-调整SpringBoot Starter默认实现
 
 * 调整 SpringBoot Starter ，去除特定业务依赖，只保留 Heimdall 框架相关功能。

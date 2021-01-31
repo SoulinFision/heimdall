@@ -18,6 +18,7 @@
 
 package com.luter.heimdall.sample.restful.controller;
 
+import com.luter.heimdall.sample.common.dto.SysUserDTO;
 import com.luter.heimdall.sample.common.vo.ResponseVO;
 import com.luter.heimdall.boot.starter.resolver.CurrentUser;
 import com.luter.heimdall.core.details.UserDetails;
@@ -25,6 +26,7 @@ import com.luter.heimdall.core.manager.AuthenticationManager;
 import com.luter.heimdall.core.session.Page;
 import com.luter.heimdall.core.session.SimpleSession;
 import com.luter.heimdall.sample.common.util.ResponseUtils;
+import com.luter.heimdall.sample.restful.details.AppUserDetails;
 import com.luter.heimdall.sample.restful.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,12 +75,15 @@ public class SysController {
      */
     @RequestMapping("/login")
     public ResponseEntity<ResponseVO<String>> login(String username, String password) {
-        if (!"aaaaaa".equals(password)) {
-            return ResponseUtils.fail("账号或者密码错误", null);
+//        if (!"aaaaaa".equals(password)) {
+//            return ResponseUtils.fail("账号或者密码错误", null);
+//        }
+        for (int i = 0; i < 100; i++) {
+            AppUserDetails userDetails = new AppUserDetails(new SysUserDTO().setId(Long.parseLong(i+"")).setEnabled(true));
+              authenticationManager.login(userDetails);
         }
-        final UserDetails userDetailsByUsername = sysUserService.getUserDetailsByUsername(username);
-        final SimpleSession simpleSession = authenticationManager.login(userDetailsByUsername);
-        return ResponseUtils.ok("success", simpleSession.getId());
+        
+        return ResponseUtils.ok("success", "");
     }
 
     /**

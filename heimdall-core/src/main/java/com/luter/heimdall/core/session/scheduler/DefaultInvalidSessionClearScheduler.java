@@ -32,7 +32,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 过期 Session 定期清理任务¬
+ * 过期 Session 定期清理任务
  *
  * @author Luter
  */

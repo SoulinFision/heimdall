@@ -25,7 +25,7 @@
     <groupId>com.github.luterc</groupId>
     <artifactId>heimdall</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <modules>
         <module>heimdall-core</module>
         <module>heimdall-cache-caffeine</module>
